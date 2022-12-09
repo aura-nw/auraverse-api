@@ -1,0 +1,97 @@
+{
+  "name": "auraverse-api",
+  "version": "1.0.0",
+  "description": "Auraverse is an independent central hub and place to discover everything in the Aura Network Blockchain ecosystem (NFTs, projects, DeFi, DAOs etc).",
+  "scripts": {
+    "build": "tsc --build tsconfig.json",
+    "dev": "ts-node ./node_modules/moleculer/bin/moleculer-runner.js --hot --repl --config moleculer.config.ts services/**/*.service.ts",
+    "start": "ts-node -r tsconfig-paths/register ./node_modules/moleculer/bin/moleculer-runner.js --config moleculer.config.ts",
+    "cli": "moleculer connect Redis",
+    "ci": "jest --watch",
+    "test": "jest --coverage",
+    "lint": "eslint --ext .js,.ts .",
+    "dc:up": "docker-compose up --build -d",
+    "dc:logs": "docker-compose logs -f",
+    "dc:down": "docker-compose down"
+  },
+  "keywords": [
+    "microservices",
+    "moleculer"
+  ],
+  "author": "",
+  "devDependencies": {
+    "@cosmjs/cosmwasm-stargate": "^0.29.5",
+    "@cosmjs/proto-signing": "^0.29.5",
+    "@cosmjs/stargate": "^0.29.5",
+    "@types/bcryptjs": "^2.4.2",
+    "@types/cookie-parser": "^1.4.3",
+    "@types/jsonwebtoken": "^8.5.9",
+    "@types/lodash": "^4.14.191",
+    "@types/pako": "^2.0.0",
+    "@types/swagger-jsdoc": "^6.0.1",
+    "@types/swagger-stats": "^0.95.6",
+    "@types/swagger-ui-dist": "^3.30.1",
+    "@typescript-eslint/eslint-plugin": "^2.26.0",
+    "@typescript-eslint/parser": "^2.26.0",
+    "eslint": "^6.8.0",
+    "eslint-plugin-import": "^2.20.2",
+    "eslint-plugin-prefer-arrow": "^1.2.2",
+    "helmet": "^6.0.1",
+    "jest": "^25.1.0",
+    "jest-cli": "^25.1.0",
+    "moleculer-repl": "^0.6.2",
+    "mysql2": "^2.3.3",
+    "pako": "^2.1.0",
+    "ts-jest": "^25.3.0",
+    "ts-node": "^8.8.1"
+  },
+  "dependencies": {
+    "@types/jest": "^25.1.4",
+    "@types/mkdirp": "^1.0.0",
+    "@types/node": "^13.9.8",
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.6",
+    "eslint-plugin-prettier": "^4.2.1",
+    "generate-password": "^1.7.0",
+    "ioredis": "^4.14.1",
+    "jsonwebtoken": "^8.5.1",
+    "knex": "^2.3.0",
+    "lodash": "^4.17.21",
+    "moleculer": "^0.14.0",
+    "moleculer-auto-openapi": "^1.1.5",
+    "moleculer-db": "^0.8.20",
+    "moleculer-db-adapter-sequelize": "^0.2.15",
+    "moleculer-web": "^0.9.0",
+    "nodemailer": "^6.8.0",
+    "objection": "^3.0.1",
+    "resilient": "^0.4.0",
+    "swagger-jsdoc": "^6.2.5",
+    "swagger-stats": "^0.99.2",
+    "swagger-ui-dist": "^4.15.5",
+    "typeorm": "^0.3.11",
+    "typescript": "^3.8.3"
+  },
+  "engines": {
+    "node": ">= 10.x.x"
+  },
+  "jest": {
+    "coverageDirectory": "<rootDir>/coverage",
+    "testEnvironment": "node",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js"
+    ],
+    "transform": {
+      "^.+\\.(ts|tsx)$": "ts-jest"
+    },
+    "testMatch": [
+      "**/*.spec.(ts|js)"
+    ],
+    "globals": {
+      "ts-jest": {
+        "tsConfig": "tsconfig.json"
+      }
+    }
+  }
+}

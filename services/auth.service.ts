@@ -110,14 +110,14 @@ export default class AuthService extends Service {
 
 	// Action
 	public async signUpPersonalAccount(username: string, email: string, password: string): Promise<ResponseDto> {
-		const existAccounts: Account[] = this.accountMixin.findOne("account", {
+		const existAccounts: Account[] = this.accountMixin.findOne({
 			account_status: AccountStatus.ACTIVATED,
 			$or: [
 				{ username },
 				{ email },
 			],
 		});
-		this.logger.info(`Result: ${this.accountMixin.findOne("account", {
+		this.logger.info(`Result: ${this.accountMixin.findOne({
 			account_status: AccountStatus.ACTIVATED,
 			$or: [
 				{ username },
@@ -140,7 +140,7 @@ export default class AuthService extends Service {
 		account.accountType = AccountType.AUTHORIZED;
 		account.accountStatus = AccountStatus.WAITING;
 		account.confirmationToken = token;
-		this.accountMixin.upsert("account", account);
+		this.accountMixin.upsert(account);
 
 		// TODO: Edit email content
 		this.commonService.sendEmail(
@@ -156,18 +156,18 @@ export default class AuthService extends Service {
 	}
 
 	public async confirmSignUp(confirmationToken: string): Promise<ResponseDto> {
-		const account: Account = this.accountMixin.findOne("account", {
+		const account: Account = this.accountMixin.findOne({
 			confirmation_token: confirmationToken,
 			account_status: AccountStatus.WAITING,
 		});
 		if (!account) { return ResponseDto.response(ErrorMap.E003, { confirmationToken }); }
 		account.accountStatus = AccountStatus.ACTIVATED;
-		this.accountMixin.upsert("account", account);
+		this.accountMixin.upsert(account);
 		return ResponseDto.response(ErrorMap.SUCCESSFUL);
 	}
 
 	public async login(username: string, password: string): Promise<ResponseDto> {
-		const account: Account = this.accountMixin.findOne("account", { username });
+		const account: Account = this.accountMixin.findOne({ username });
 		if (!account) { return ResponseDto.response(ErrorMap.E004, { username, password }); }
 		if (account.accountStatus === AccountStatus.WAITING) { return ResponseDto.response(ErrorMap.E005, { username, password }); }
 		if (!bcrypt.compareSync(password, account.password!)) { return ResponseDto.response(ErrorMap.E005, { username, password }); }
@@ -178,7 +178,7 @@ export default class AuthService extends Service {
 	}
 
 	public async forgotPassword(email: string): Promise<ResponseDto> {
-		const account: Account = this.accountMixin.findOne("account", { email });
+		const account: Account = this.accountMixin.findOne({ email });
 		if (!account) { return ResponseDto.response(ErrorMap.E004, { email }); }
 		if (account.accountStatus === AccountStatus.WAITING) { return ResponseDto.response(ErrorMap.E005, { email }); }
 		const newPassword = generator.generate({
@@ -188,7 +188,7 @@ export default class AuthService extends Service {
 			excludeSimilarCharacters: true,
 		});
 		account.password = bcrypt.hashSync(newPassword, 8);
-		this.accountMixin.upsert("account", account);
+		this.accountMixin.upsert(account);
 
 		this.commonService.sendEmail(
 			email,

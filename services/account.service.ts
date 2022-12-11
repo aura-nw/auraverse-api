@@ -1,4 +1,3 @@
-/* eslint-disable capitalized-comments */
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/camelcase */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
@@ -14,11 +13,13 @@ import {
     VerifyCodeIdOwnershipRequest,
 } from "../types";
 import { Account, CodeId } from "../models";
-import { DatabaseAccountMixin } from "../mixins/database";
+import { DatabaseAccountMixin, DatabaseCodeIdMixin } from "../mixins/database";
 import CallApiMixin from "../mixins/callapi/call-api.mixin";
 
 export default class AccountService extends Service {
     private callApiMixin = new CallApiMixin().start();
+    private accountMixin = new DatabaseAccountMixin();
+    private codeIdMixin = new DatabaseCodeIdMixin();
 
     public constructor(public broker: ServiceBroker) {
         super(broker);
@@ -95,60 +96,57 @@ export default class AccountService extends Service {
     }
 
     // Action
-    // public async changePassword(username: string, oldPassword: string, newPassword: string): Promise<ResponseDto> {
-    //     const account: Account = (await dbAccountMixin.findOne({
-    //         where: { username },
-    //     }))[0];
-    //     if (!account) {return ResponseDto.response(ErrorMap.E004, { username, oldPassword, newPassword });}
-    //     if (account.accountStatus === AccountStatus.WAITING) {return ResponseDto.response(ErrorMap.E005, { username, oldPassword, newPassword });}
-    //     if (!bcrypt.compareSync(oldPassword, account.password!))
-    //         {return ResponseDto.response(ErrorMap.E005, { username, oldPassword, newPassword });}
+    public async changePassword(username: string, oldPassword: string, newPassword: string): Promise<ResponseDto> {
+        const account: Account = this.accountMixin.findOne({ username });
+        if (!account) {return ResponseDto.response(ErrorMap.E004, { username, oldPassword, newPassword });}
+        if (account.accountStatus === AccountStatus.WAITING) {return ResponseDto.response(ErrorMap.E005, { username, oldPassword, newPassword });}
+        if (!bcrypt.compareSync(oldPassword, account.password!))
+            {return ResponseDto.response(ErrorMap.E005, { username, oldPassword, newPassword });}
 
-    //     account.password = bcrypt.hashSync(newPassword, 8);
-    //     await dbAccountMixin.update(account);
-    //     return ResponseDto.response(ErrorMap.SUCCESSFUL, { account });
-    // }
+        account.password = bcrypt.hashSync(newPassword, 8);
+        this.accountMixin.upsert(account);
+        return ResponseDto.response(ErrorMap.SUCCESSFUL, { account });
+    }
 
-    // public async changeEmail(username: string, newEmail: string, password: string): Promise<ResponseDto> {
-    //     const [accounts, existEmails] = await Promise.all([
-    //         dbAccountMixin.findOne({ where: { username } }),
-    //         dbAccountMixin.findOne({ where: { email: newEmail } }),
-    //     ]);
-    //     const account = accounts[0];
-    //     if (!account) {return ResponseDto.response(ErrorMap.E004, { username, newEmail, password });}
-    //     if (account.accountStatus === AccountStatus.WAITING) {return ResponseDto.response(ErrorMap.E005, { username, newEmail, password });}
-    //     if (existEmails.length > 0) {return ResponseDto.response(ErrorMap.E002, { username, newEmail, password });}
-    //     else if (!password) {return ResponseDto.response(ErrorMap.EMAIL_VALID);}
-    //     if (!bcrypt.compareSync(password, account.password))
-    //         {return ResponseDto.response(ErrorMap.E006, { username, newEmail, password });}
+    public async changeEmail(username: string, newEmail: string, password: string): Promise<ResponseDto> {
+        const [account, existEmails] = await Promise.all([
+            this.accountMixin.findOne({ username }),
+            this.accountMixin.find({ email: newEmail }),
+        ]);
+        if (!account) {return ResponseDto.response(ErrorMap.E004, { username, newEmail, password });}
+        if (account.accountStatus === AccountStatus.WAITING) {return ResponseDto.response(ErrorMap.E005, { username, newEmail, password });}
+        if (existEmails.length > 0) {return ResponseDto.response(ErrorMap.E002, { username, newEmail, password });}
+        else if (!password) {return ResponseDto.response(ErrorMap.EMAIL_VALID);}
+        if (!bcrypt.compareSync(password, account.password))
+            {return ResponseDto.response(ErrorMap.E006, { username, newEmail, password });}
 
-    //     account.email = newEmail;
-    //     await dbAccountMixin.update(account);
-    //     return ResponseDto.response(ErrorMap.SUCCESSFUL, { account });
-    // }
+        account.email = newEmail;
+        this.accountMixin.upsert(account);
+        return ResponseDto.response(ErrorMap.SUCCESSFUL, { account });
+    }
 
-    // public async verifyCodeIdOwnership(codeId: number, accountId: number): Promise<ResponseDto> {
-    //     const [codeIdOnChain, codeIdAurascan, codeIdDb] = await Promise.all([
-    //         this.callApiFromDomain([process.env.LCD], `${ApiQuery.GET_DATA_CODE_ID}${codeId}`),
-    //         this.callApiFromDomain([process.env.AURASCAN_API], `${ApiQuery.GET_CODE_ID_VERIFICATION}${codeId}`),
-    //         dbCodeIdMixin.findOne({ where: { code_id: codeId } }),
-    //     ]);
-    //     if (!codeIdOnChain.code_info) {return ResponseDto.response(ErrorMap.E007, { codeId, accountId });}
-    //     if (codeIdAurascan.contract_verification === ContractVerification.UNVERIFIED)
-    //         {return ResponseDto.response(ErrorMap.E008, { codeId, accountId });}
-    //     if (codeIdDb.length > 0) {return ResponseDto.response(ErrorMap.E009, { codeId, accountId });}
+    public async verifyCodeIdOwnership(codeId: number, accountId: number): Promise<ResponseDto> {
+        const [codeIdOnChain, codeIdAurascan, codeIdDb] = await Promise.all([
+            this.callApiFromDomain([process.env.LCD], `${ApiQuery.GET_DATA_CODE_ID}${codeId}`),
+            this.callApiFromDomain([process.env.AURASCAN_API], `${ApiQuery.GET_CODE_ID_VERIFICATION}${codeId}`),
+            this.codeIdMixin.findOne({ code_id: codeId }),
+        ]);
+        if (!codeIdOnChain.code_info) {return ResponseDto.response(ErrorMap.E007, { codeId, accountId });}
+        if (codeIdAurascan.contract_verification === ContractVerification.UNVERIFIED)
+            {return ResponseDto.response(ErrorMap.E008, { codeId, accountId });}
+        if (codeIdDb.length > 0) {return ResponseDto.response(ErrorMap.E009, { codeId, accountId });}
 
-    //     if (!accountId || accountId === 0)
-    //         {return ResponseDto.response(ErrorMap.CHECK_CODE_ID, { data: codeIdOnChain });}
+        if (!accountId || accountId === 0)
+            {return ResponseDto.response(ErrorMap.CHECK_CODE_ID, { data: codeIdOnChain });}
 
-    //     const codeIdEntity = new CodeId();
-    //     codeIdEntity.codeId = codeId;
-    //     codeIdEntity.accountId = accountId;
-    //     codeIdEntity.creator = codeIdOnChain.code_info.creator;
-    //     codeIdEntity.dataHash = codeIdOnChain.code_info.data_hash;
-    //     codeIdEntity.data = codeIdOnChain.data;
-    //     await dbCodeIdMixin.update(codeIdEntity);
+        const codeIdEntity = new CodeId();
+        codeIdEntity.codeId = codeId;
+        codeIdEntity.accountId = accountId;
+        codeIdEntity.creator = codeIdOnChain.code_info.creator;
+        codeIdEntity.dataHash = codeIdOnChain.code_info.data_hash;
+        codeIdEntity.data = codeIdOnChain.data;
+        this.codeIdMixin.upsert(codeIdEntity);
 
-    //     return ResponseDto.response(ErrorMap.VERIFY_CODE_ID_OWNERSHIP, { codeId });
-    // }
+        return ResponseDto.response(ErrorMap.VERIFY_CODE_ID_OWNERSHIP, { codeId });
+    }
 }

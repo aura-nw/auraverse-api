@@ -7,15 +7,7 @@ import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import swStats from "swagger-stats";
 import { Config } from "../common";
-import swaggerSpec = require("../swagger.json");
 import { RequestMessage } from "../types";
-const tlBucket = 60000;
-const swMiddleware = swStats.getMiddleware({
-	name: "swagger-stats",
-	timelineBucketDuration: tlBucket,
-	uriPath: "/dashboard",
-	swaggerSpec,
-});
 
 export default class ApiService extends Service {
 
@@ -54,24 +46,7 @@ export default class ApiService extends Service {
 						path: "/openapi",
 						aliases: {
 							"GET /openapi.json": "openapi.generateDocs", // Swagger scheme
-							"GET /ui": "openapi.ui", // Ui
-						},
-					},
-					{
-						path: "/authorized",
-						whitelist: ["$node.*", "api.listAliases"],
-						authorization: true,
-						authentication: true,
-						// Roles: [UserRole.SUPERADMIN],
-						aliases: {
-							"GET /health": "$node.health",
-							"GET /services": "$node.services",
-							"GET /actions": "$node.actions",
-							"GET /list": "$node.list",
-							"GET /metrics": "$node.metrics",
-							"GET /events": "$node.events",
-							"GET /options": "$node.options",
-							"GET /aliases": "api.listAliases",
+							"GET /": "openapi.ui", // Ui
 						},
 					},
 					{
@@ -82,12 +57,8 @@ export default class ApiService extends Service {
 							credentials: false,
 							maxAge: 3600,
 						},
-						whitelist: [
-							// Access to any actions in all services under "/api" URL
-							"**",
-						],
 						// Route-level Express middlewares. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Middlewares
-						use: [swMiddleware],
+						use: [],
 						// Enable/disable parameter merging method. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Disable-merging
 						mergeParams: true,
 
@@ -102,23 +73,10 @@ export default class ApiService extends Service {
 						autoAliases: true,
 
 						aliases: {
-							"GET /": (req: any, res: any) => {
-								// Console.log(swStats.getPromClient());
-								res.statusCode = 302;
-								res.setHeader("Location", "/api/dashboard/");
-								return res.end();
-							},
-							"GET /stats": (req: any, res: any) => {
-								res.setHeader("Content-Type", "application/json");
-								return res.end(JSON.stringify(swStats.getCoreStats()));
-							},
-							"GET /metrics": (req: any, res: any) => {
-								res.setHeader("Content-Type", "application/json");
-								return res.end(JSON.stringify(swStats.getPromStats()));
-							},
-
 							"POST /auth/sign-up": "auth.signUp",
 							"GET /auth/confirm": "auth.confirmSignUp",
+							"POST /auth/login": "auth.login",
+							"POST /auth/forgot-password": "auth.forgotPassword",
 						},
 						/**
 						 * Before call hook. You can check the request.
@@ -163,7 +121,7 @@ export default class ApiService extends Service {
 						},
 
 						// Mapping policy setting. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Mapping-policy
-						mappingPolicy: "all", // Available values: "all", "restrict"
+						mappingPolicy: Config.MAPPING_POLICY, // Available values: "all", "restrict"
 
 						// Enable/disable logging
 						logging: true,
@@ -176,12 +134,8 @@ export default class ApiService extends Service {
 							credentials: false,
 							maxAge: 3600,
 						},
-						whitelist: [
-							// Access to any actions in all services under "/api" URL
-							"**",
-						],
 						// Route-level Express middlewares. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Middlewares
-						use: [swMiddleware],
+						use: [],
 						// Enable/disable parameter merging method. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Disable-merging
 						mergeParams: true,
 
@@ -189,27 +143,14 @@ export default class ApiService extends Service {
 						authentication: true,
 
 						// Enable authorization. Implement the logic into `authorize` method. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Authorization
-						authorization: false,
+						authorization: true,
 
 						// The auto-alias feature allows you to declare your route alias directly in your services.
 						// The gateway will dynamically build the full routes from service schema.
 						autoAliases: true,
 
 						aliases: {
-							"GET /": (req: any, res: any) => {
-								// Console.log(swStats.getPromClient());
-								res.statusCode = 302;
-								res.setHeader("Location", "/api/dashboard/");
-								return res.end();
-							},
-							"GET /stats": (req: any, res: any) => {
-								res.setHeader("Content-Type", "application/json");
-								return res.end(JSON.stringify(swStats.getCoreStats()));
-							},
-							"GET /metrics": (req: any, res: any) => {
-								res.setHeader("Content-Type", "application/json");
-								return res.end(JSON.stringify(swStats.getPromStats()));
-							},
+
 						},
 
 						// Calling options. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Calling-options

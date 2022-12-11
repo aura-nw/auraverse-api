@@ -80,3 +80,11 @@ export enum ProjectCategories {
     DAO = "DAO",
     NFT_COLLECTION = "NFT Collection",
 }
+
+export enum DbTable {
+    ACCOUNT = "account",
+    CODE_ID = "code_id",
+    PROJECT_CODE_ID = "project_code_id",
+    PROJECT = "project",
+    REQUEST = "request",
+}

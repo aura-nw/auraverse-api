@@ -1,23 +1,29 @@
 import { knex } from "config/database";
 
 export class DatabaseMixin {
-	public insert(tableName: string, data: any): any {
-		return knex(tableName).insert(data).toSQL().toNative();
+	private tableName: string;
+
+	public constructor(tableName: string) {
+		this.tableName = tableName;
 	}
 
-	public upsert(tableName: string, data: any): any {
-		return knex(tableName).upsert(data).toSQL().toNative();
+	public insert(data: any): any {
+		return knex(this.tableName).insert(data).toSQL().toNative();
 	}
 
-	public findOne(tableName: string, where: any): any {
-		return knex(tableName).select("*").where(where).first().toSQL().toNative();
+	public upsert(data: any): any {
+		return knex(this.tableName).upsert(data).toSQL().toNative();
 	}
 
-	public find(tableName: string, where: any): any {
-		return knex(tableName).select("*").where(where).toSQL().toNative();
+	public findOne(where: any): any {
+		return knex(this.tableName).select("*").where(where).first().toSQL().toNative();
 	}
 
-	public delete(tableName: string, where: any): any {
-		return knex(tableName).where(where).del().toSQL().toNative();
+	public find(where: any): any {
+		return knex(this.tableName).select("*").where(where).toSQL().toNative();
+	}
+
+	public delete(where: any): any {
+		return knex(this.tableName).where(where).del().toSQL().toNative();
 	}
 }

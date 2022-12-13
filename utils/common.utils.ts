@@ -1,8 +1,13 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable id-blacklist */
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+import * as dotenv from "dotenv";
 const nodemailer = require("nodemailer");
 
+dotenv.config();
+
 export class Common {
+    private transporter: any;
+
     public async getTransport(transporter: any) {
         if (transporter === undefined) {
             transporter = nodemailer.createTransport({
@@ -21,10 +26,10 @@ export class Common {
         return transporter;
     }
 
-    public async sendEmail(to: string, subject: string, html: string, transporter: any) {
+    public async sendEmail(to: string, subject: string, html: string) {
         try {
-            transporter = await this.getTransport(transporter);
-            await transporter.sendMail({
+            this.transporter = await this.getTransport(this.transporter);
+            await this.transporter.sendMail({
                 from: process.env.AURA_EMAIL,
                 to,
                 subject,

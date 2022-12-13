@@ -1,6 +1,6 @@
 import * as OpenApi from "moleculer-auto-openapi";
 import { Service, ServiceBroker } from "moleculer";
-import { ModulePath } from "common";
+import { ModulePath } from "../common";
 
 export default class OpenApiService extends Service {
 

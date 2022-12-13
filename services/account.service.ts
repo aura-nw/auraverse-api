@@ -1,10 +1,9 @@
 /* eslint-disable camelcase */
-/* eslint-disable @typescript-eslint/camelcase */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 "use strict";
 
 import { Service, ServiceBroker, Context } from "moleculer";
 import * as bcrypt from "bcryptjs";
+import { DatabaseAccountMixin, DatabaseCodeIdMixin } from "../mixins/database";
 import { AccountStatus, ApiConstants, CallApiMethod, ContractVerification, ErrorMap, ApiQuery, ModulePath } from "../common";
 import {
     ChangeEmailRequest,
@@ -13,7 +12,6 @@ import {
     VerifyCodeIdOwnershipRequest,
 } from "../types";
 import { Account, CodeId } from "../models";
-import { DatabaseAccountMixin, DatabaseCodeIdMixin } from "../mixins/database";
 import CallApiMixin from "../mixins/callapi/call-api.mixin";
 
 export default class AccountService extends Service {
@@ -36,7 +34,11 @@ export default class AccountService extends Service {
                         method: CallApiMethod.POST,
                         path: ApiConstants.CHANGE_PASSWORD,
                     },
-                    body: {
+                    openapi: {
+                        summary: "Change account's password",
+                        description: "Change account's password",
+                    },
+                    params: {
                         username: "string",
                         oldPassword: "string",
                         newPassword: "string",
@@ -58,7 +60,11 @@ export default class AccountService extends Service {
                         method: CallApiMethod.POST,
                         path: ApiConstants.CHANGE_EMAIL,
                     },
-                    body: {
+                    openapi: {
+                        summary: "Change account's email",
+                        description: "Change account's email",
+                    },
+                    params: {
                         username: "string",
                         newEmail: "string",
                         password: "string",
@@ -80,7 +86,11 @@ export default class AccountService extends Service {
                         method: CallApiMethod.POST,
                         path: ApiConstants.VERIFY_CODE_ID_OWNERSHIP,
                     },
-                    body: {
+                    openapi: {
+                        summary: "Claim ownership of a code id for an account",
+                        description: "Claim ownership of a code id for an account",
+                    },
+                    params: {
                         codeId: "number",
                         accountId: "number",
                     },
@@ -97,14 +107,12 @@ export default class AccountService extends Service {
 
     // Action
     public async changePassword(username: string, oldPassword: string, newPassword: string): Promise<ResponseDto> {
-        const account: Account = this.accountMixin.findOne({ username });
-        if (!account) {return ResponseDto.response(ErrorMap.E004, { username, oldPassword, newPassword });}
-        if (account.accountStatus === AccountStatus.WAITING) {return ResponseDto.response(ErrorMap.E005, { username, oldPassword, newPassword });}
-        if (!bcrypt.compareSync(oldPassword, account.password!))
-            {return ResponseDto.response(ErrorMap.E005, { username, oldPassword, newPassword });}
+        const account: Account = await this.accountMixin.findOne({ username });
+        if (!account) { return ResponseDto.response(ErrorMap.E004, { username, oldPassword, newPassword }); }
+        if (account.accountStatus === AccountStatus.WAITING) { return ResponseDto.response(ErrorMap.E005, { username, oldPassword, newPassword }); }
+        if (!bcrypt.compareSync(oldPassword, account.password!)) { return ResponseDto.response(ErrorMap.E005, { username, oldPassword, newPassword }); }
+        await this.accountMixin.update({ id: account.id }, { password: bcrypt.hashSync(newPassword, 8) });
 
-        account.password = bcrypt.hashSync(newPassword, 8);
-        this.accountMixin.upsert(account);
         return ResponseDto.response(ErrorMap.SUCCESSFUL, { account });
     }
 
@@ -113,15 +121,17 @@ export default class AccountService extends Service {
             this.accountMixin.findOne({ username }),
             this.accountMixin.find({ email: newEmail }),
         ]);
-        if (!account) {return ResponseDto.response(ErrorMap.E004, { username, newEmail, password });}
-        if (account.accountStatus === AccountStatus.WAITING) {return ResponseDto.response(ErrorMap.E005, { username, newEmail, password });}
-        if (existEmails.length > 0) {return ResponseDto.response(ErrorMap.E002, { username, newEmail, password });}
-        else if (!password) {return ResponseDto.response(ErrorMap.EMAIL_VALID);}
-        if (!bcrypt.compareSync(password, account.password))
-            {return ResponseDto.response(ErrorMap.E006, { username, newEmail, password });}
+        if (!account) { return ResponseDto.response(ErrorMap.E004, { username, newEmail, password }); }
+        if (account.accountStatus === AccountStatus.WAITING) {
+            return ResponseDto.response(ErrorMap.E005, { username, newEmail, password });
+        }
+        if (existEmails.length > 0) { return ResponseDto.response(ErrorMap.E002, { username, newEmail, password }); }
+        else if (!password) { return ResponseDto.response(ErrorMap.EMAIL_VALID); }
+        if (!bcrypt.compareSync(password, account.password)) {
+            return ResponseDto.response(ErrorMap.E006, { username, newEmail, password });
+        }
+        await this.accountMixin.update({ id: account.id }, { email: newEmail });
 
-        account.email = newEmail;
-        this.accountMixin.upsert(account);
         return ResponseDto.response(ErrorMap.SUCCESSFUL, { account });
     }
 
@@ -131,21 +141,20 @@ export default class AccountService extends Service {
             this.callApiFromDomain([process.env.AURASCAN_API], `${ApiQuery.GET_CODE_ID_VERIFICATION}${codeId}`),
             this.codeIdMixin.findOne({ code_id: codeId }),
         ]);
-        if (!codeIdOnChain.code_info) {return ResponseDto.response(ErrorMap.E007, { codeId, accountId });}
-        if (codeIdAurascan.contract_verification === ContractVerification.UNVERIFIED)
-            {return ResponseDto.response(ErrorMap.E008, { codeId, accountId });}
-        if (codeIdDb.length > 0) {return ResponseDto.response(ErrorMap.E009, { codeId, accountId });}
+        if (!codeIdOnChain.code_info) { return ResponseDto.response(ErrorMap.E007, { codeId, accountId }); }
+        if (codeIdAurascan.contract_verification === ContractVerification.UNVERIFIED) { return ResponseDto.response(ErrorMap.E008, { codeId, accountId }); }
+        if (codeIdDb.length > 0) { return ResponseDto.response(ErrorMap.E009, { codeId, accountId }); }
 
-        if (!accountId || accountId === 0)
-            {return ResponseDto.response(ErrorMap.CHECK_CODE_ID, { data: codeIdOnChain });}
+        if (!accountId || accountId === 0) { return ResponseDto.response(ErrorMap.CHECK_CODE_ID, { data: codeIdOnChain }); }
 
-        const codeIdEntity = new CodeId();
-        codeIdEntity.codeId = codeId;
-        codeIdEntity.accountId = accountId;
-        codeIdEntity.creator = codeIdOnChain.code_info.creator;
-        codeIdEntity.dataHash = codeIdOnChain.code_info.data_hash;
-        codeIdEntity.data = codeIdOnChain.data;
-        this.codeIdMixin.upsert(codeIdEntity);
+        const codeIdEntity = {
+            codeId,
+            accountId,
+            creator: codeIdOnChain.code_info.creator,
+            dataHash: codeIdOnChain.code_info.data_hash,
+            data: codeIdOnChain.data,
+        } as CodeId;
+        this.codeIdMixin.insert(codeIdEntity);
 
         return ResponseDto.response(ErrorMap.VERIFY_CODE_ID_OWNERSHIP, { codeId });
     }

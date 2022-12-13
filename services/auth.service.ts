@@ -1,7 +1,3 @@
-/* eslint-disable no-underscore-dangle */
-/* eslint-disable @typescript-eslint/no-var-requires */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable @typescript-eslint/camelcase */
 /* eslint-disable camelcase */
 "use strict";
 
@@ -9,7 +5,8 @@ import { Service, ServiceBroker, Context } from "moleculer";
 import * as jwt from "jsonwebtoken";
 import * as bcrypt from "bcryptjs";
 import * as generator from "generate-password";
-import { DatabaseAccountMixin } from "mixins/database";
+import { Common } from "../utils";
+import { DatabaseAccountMixin } from "../mixins/database";
 import { AccountStatus, AccountType, ApiConstants, CallApiMethod, ErrorMap, ModulePath } from "../common";
 import {
 	ConfirmSignUpRequest,
@@ -22,11 +19,13 @@ import { Account } from "../models";
 
 export default class AuthService extends Service {
 	private accountMixin = new DatabaseAccountMixin();
+	private commonService  = new Common();
 
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
 			name: ModulePath.AUTH,
+			mixins: [this.accountMixin],
 			actions: {
 				/**
 				 * Sign up a personal account
@@ -37,7 +36,11 @@ export default class AuthService extends Service {
 						method: CallApiMethod.POST,
 						path: ApiConstants.SIGN_UP_PERSONAL_ACCOUNT,
 					},
-					body: {
+					openapi: {
+						summary: "Sign up a personal account",
+						description: "Sign up a personal account",
+					},
+					params: {
 						username: "string",
 						email: "string",
 						password: "string",
@@ -59,6 +62,10 @@ export default class AuthService extends Service {
 						method: CallApiMethod.GET,
 						path: ApiConstants.CONFIRM_SIGN_UP,
 					},
+					openapi: {
+						summary: "Confirm account sign up via email",
+						description: "Confirm account sign up via email",
+					},
 					params: {
 						confirmationToken: "string",
 					},
@@ -75,7 +82,11 @@ export default class AuthService extends Service {
 						method: CallApiMethod.POST,
 						path: ApiConstants.LOGIN,
 					},
-					body: {
+					openapi: {
+						summary: "Login to Auraverse",
+						description: "Login to Auraverse",
+					},
+					params: {
 						username: "string",
 						password: "string",
 					},
@@ -95,7 +106,11 @@ export default class AuthService extends Service {
 						method: CallApiMethod.POST,
 						path: ApiConstants.FORGOT_PASSWORD,
 					},
-					body: {
+					openapi: {
+						summary: "Forgot password",
+						description: "Forgot password",
+					},
+					params: {
 						email: "string",
 					},
 					async handler(ctx: Context<ForgotPasswordRequest>): Promise<ResponseDto> {
@@ -110,75 +125,65 @@ export default class AuthService extends Service {
 
 	// Action
 	public async signUpPersonalAccount(username: string, email: string, password: string): Promise<ResponseDto> {
-		const existAccounts: Account[] = this.accountMixin.findOne({
-			account_status: AccountStatus.ACTIVATED,
-			$or: [
-				{ username },
-				{ email },
-			],
-		});
-		this.logger.info(`Result: ${this.accountMixin.findOne({
-			account_status: AccountStatus.ACTIVATED,
-			$or: [
-				{ username },
-				{ email },
-			],
-		})}`);
-		if (existAccounts.length > 0) {
-			if (existAccounts[0].username === username) {
+		const existAccount: Account = await this.accountMixin.checkExistAccount(username, email);
+		if (existAccount) {
+			if (existAccount.username === username) {
 				return ResponseDto.response(ErrorMap.E001, { username, email, password });
 			}
-			if (existAccounts[0].email === email) {
+			if (existAccount.email === email) {
 				return ResponseDto.response(ErrorMap.E002, { username, email, password });
 			}
 		}
-		const token = jwt.sign({ username, email, password }, process.env.SECRET!);
-		const account = new Account();
-		account.username = username;
-		account.email = email;
-		account.password = bcrypt.hashSync(password, 8);
-		account.accountType = AccountType.AUTHORIZED;
-		account.accountStatus = AccountStatus.WAITING;
-		account.confirmationToken = token;
-		this.accountMixin.upsert(account);
 
+		const token = jwt.sign({ username, email, password }, process.env.JWT_SECRET!);
+		const account = {
+			username,
+			email,
+			password: bcrypt.hashSync(password, 8),
+			accountType: AccountType.AUTHORIZED,
+			accountStatus: AccountStatus.WAITING,
+			confirmationToken: token,
+		} as Account;
 		// TODO: Edit email content
-		this.commonService.sendEmail(
+		await this.commonService.sendEmail(
 			email,
 			"Confirm Auraverse account sign-up",
 			`<h1>Email Confirmation</h1>
         <p>Thank you for subscribing. Please confirm your email by clicking on the following link</p>
-        <a href=${process.env.SERVER_HOST}/${ModulePath.AUTH}/${ApiConstants.CONFIRM_SIGN_UP}/${token}> Click here</a>
+        <a href=${process.env.BASE_URL}:${process.env.BASE_PORT}/public/${ModulePath.AUTH}/${ApiConstants.CONFIRM_SIGN_UP}?confirmationToken=${token}> 
+		Click here</a>
         </div>`
 		);
+		await this.accountMixin.insert(account);
 
 		return ResponseDto.response(ErrorMap.SENT_VERIFICATION, { account });
 	}
 
 	public async confirmSignUp(confirmationToken: string): Promise<ResponseDto> {
-		const account: Account = this.accountMixin.findOne({
+		const account: Account = await this.accountMixin.findOne({
 			confirmation_token: confirmationToken,
 			account_status: AccountStatus.WAITING,
 		});
 		if (!account) { return ResponseDto.response(ErrorMap.E003, { confirmationToken }); }
-		account.accountStatus = AccountStatus.ACTIVATED;
-		this.accountMixin.upsert(account);
+		await this.accountMixin.update({ id: account.id }, { account_status: AccountStatus.ACTIVATED });
+
 		return ResponseDto.response(ErrorMap.SUCCESSFUL);
 	}
 
 	public async login(username: string, password: string): Promise<ResponseDto> {
-		const account: Account = this.accountMixin.findOne({ username });
+		const account: Account = await this.accountMixin.findOne({ username });
 		if (!account) { return ResponseDto.response(ErrorMap.E004, { username, password }); }
 		if (account.accountStatus === AccountStatus.WAITING) { return ResponseDto.response(ErrorMap.E005, { username, password }); }
 		if (!bcrypt.compareSync(password, account.password!)) { return ResponseDto.response(ErrorMap.E005, { username, password }); }
-		const token = jwt.sign({ id: account.id }, process.env.SECRET!, {
+		const token = jwt.sign({ id: account.id }, process.env.JWT_SECRET!, {
 			expiresIn: 86400, // Expires in 24 hours
 		});
+
 		return ResponseDto.response(ErrorMap.SUCCESSFUL, { token });
 	}
 
 	public async forgotPassword(email: string): Promise<ResponseDto> {
-		const account: Account = this.accountMixin.findOne({ email });
+		const account: Account = await this.accountMixin.findOne({ email });
 		if (!account) { return ResponseDto.response(ErrorMap.E004, { email }); }
 		if (account.accountStatus === AccountStatus.WAITING) { return ResponseDto.response(ErrorMap.E005, { email }); }
 		const newPassword = generator.generate({
@@ -187,16 +192,15 @@ export default class AuthService extends Service {
 			symbols: true,
 			excludeSimilarCharacters: true,
 		});
-		account.password = bcrypt.hashSync(newPassword, 8);
-		this.accountMixin.upsert(account);
-
-		this.commonService.sendEmail(
+		await this.commonService.sendEmail(
 			email,
 			"Reset Auraverse password",
 			`<h1>New Password</h1>
         <p>Your new password is: ${newPassword}</p>
         </div>`
 		);
+		await this.accountMixin.update({ id: account.id }, { password: bcrypt.hashSync(newPassword, 8) });
+
 		return ResponseDto.response(ErrorMap.SENT_NEW_PASSWORD);
 	}
 }

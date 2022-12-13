@@ -1,4 +1,4 @@
-import { knex } from "config/database";
+import { knex } from "../../config/database";
 
 export class DatabaseMixin {
 	private tableName: string;
@@ -7,23 +7,23 @@ export class DatabaseMixin {
 		this.tableName = tableName;
 	}
 
-	public insert(data: any): any {
-		return knex(this.tableName).insert(data).toSQL().toNative();
+	public async insert(data: any): Promise<any> {
+		return await knex(this.tableName).insert(data);
 	}
 
-	public upsert(data: any): any {
-		return knex(this.tableName).upsert(data).toSQL().toNative();
+	public async update(where: any, data: any): Promise<any> {
+		return await knex(this.tableName).where(where).update(data);
 	}
 
-	public findOne(where: any): any {
-		return knex(this.tableName).select("*").where(where).first().toSQL().toNative();
+	public async findOne(where: any): Promise<any> {
+		return await knex(this.tableName).select("*").where(where).first();
 	}
 
-	public find(where: any): any {
-		return knex(this.tableName).select("*").where(where).toSQL().toNative();
+	public async find(where: any): Promise<any> {
+		return await knex(this.tableName).select("*").where(where);
 	}
 
-	public delete(where: any): any {
-		return knex(this.tableName).where(where).del().toSQL().toNative();
+	public async delete(where: any): Promise<any> {
+		return await knex(this.tableName).where(where).del();
 	}
 }

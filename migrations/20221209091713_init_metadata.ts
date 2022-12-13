@@ -1,8 +1,8 @@
 /* eslint-disable camelcase */
 /* eslint-disable prefer-arrow/prefer-arrow-functions */
 import { Knex } from "knex";
+import * as bcrypt from "bcryptjs";
 import { AccountStatus, AccountType, ProjectActiveStatus, ProjectStatus, RequestType } from "../common";
-
 
 export async function up(knex: Knex) {
     await knex.schema.createTable("account", (table: any) => {
@@ -45,7 +45,7 @@ export async function up(knex: Knex) {
         table.string("name").notNullable();
         table.string("email").notNullable();
         table.text("description").notNullable();
-        table.text("other_documentation").notNullable();
+        table.text("other_documentation").nullable();
         table.enum("status", [ProjectStatus.APPROVED, ProjectStatus.REJECTED, ProjectStatus.SUBMITTED])
             .defaultTo(ProjectStatus.SUBMITTED).notNullable();
         table.enum("active_status", [ProjectActiveStatus.COMING_SOON, ProjectActiveStatus.RELEASED])
@@ -102,7 +102,7 @@ export async function up(knex: Knex) {
     await knex("account").insert({
         username: "admin",
         email: "verify@aura.network",
-        password: "aura@2022",
+        password: bcrypt.hashSync("aura@2022", 8),
         account_type: AccountType.ADMIN,
         account_status: AccountStatus.ACTIVATED,
         confirmation_token: null,

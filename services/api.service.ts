@@ -1,3 +1,4 @@
+/* eslint-disable capitalized-comments */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import * as jwt from "jsonwebtoken";
@@ -5,12 +6,13 @@ import { Service, ServiceBroker, Context } from "moleculer";
 import ApiGateway from "moleculer-web";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
-import swStats from "swagger-stats";
+import * as dotenv from "dotenv";
 import { Config } from "../common";
 import { RequestMessage } from "../types";
 
-export default class ApiService extends Service {
+dotenv.config();
 
+export default class ApiService extends Service {
 	public constructor(broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
@@ -18,7 +20,7 @@ export default class ApiService extends Service {
 			mixins: [ApiGateway],
 			// More info about settings: https://moleculer.services/docs/0.14/moleculer-web.html
 			settings: {
-				port: process.env.PORT || 3000,
+				port: process.env.BASE_PORT || 3000,
 
 				use: [
 					cookieParser(),
@@ -40,43 +42,43 @@ export default class ApiService extends Service {
 						},
 					}),
 				],
+				cors: {
+					origin: ["*"],
+					methods: ["GET", "OPTIONS", "POST", "PUT", "DELETE"],
+					credentials: false,
+					maxAge: 3600,
+				},
 				routes: [
 					// Moleculer-auto-openapi routes
 					{
 						path: "/openapi",
 						aliases: {
 							"GET /openapi.json": "openapi.generateDocs", // Swagger scheme
-							"GET /": "openapi.ui", // Ui
+							"GET /ui": "openapi.ui", // Ui
 						},
 					},
 					{
 						path: "/api",
-						cors: {
-							origin: ["*"],
-							methods: ["GET", "OPTIONS", "POST", "PUT", "DELETE"],
-							credentials: false,
-							maxAge: 3600,
-						},
 						// Route-level Express middlewares. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Middlewares
 						use: [],
 						// Enable/disable parameter merging method. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Disable-merging
 						mergeParams: true,
 
 						// Enable authentication. Implement the logic into `authenticate` method. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Authentication
-						authentication: false,
+						authentication: true,
 
 						// Enable authorization. Implement the logic into `authorize` method. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Authorization
-						authorization: false,
-
-						// The auto-alias feature allows you to declare your route alias directly in your services.
-						// The gateway will dynamically build the full routes from service schema.
-						autoAliases: true,
-
+						authorization: true,
+						cors: {
+							origin: ["*"],
+							methods: ["GET", "OPTIONS", "POST", "PUT", "DELETE"],
+							credentials: true,
+							maxAge: 3600,
+						},
 						aliases: {
-							"POST /auth/sign-up": "auth.signUp",
-							"GET /auth/confirm": "auth.confirmSignUp",
-							"POST /auth/login": "auth.login",
-							"POST /auth/forgot-password": "auth.forgotPassword",
+							"POST /account/change-password": "account.changePassword",
+							"POST /account/change-email": "account.changeEmail",
+							"POST /account/verify-code-id-ownership": "account.verifyCodeIdOwnership",
 						},
 						/**
 						 * Before call hook. You can check the request.
@@ -127,30 +129,23 @@ export default class ApiService extends Service {
 						logging: true,
 					},
 					{
-						path: "/admin",
-						cors: {
-							origin: ["*"],
-							methods: ["GET", "OPTIONS", "POST", "PUT", "DELETE"],
-							credentials: false,
-							maxAge: 3600,
-						},
+						path: "/public",
 						// Route-level Express middlewares. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Middlewares
 						use: [],
 						// Enable/disable parameter merging method. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Disable-merging
 						mergeParams: true,
 
 						// Enable authentication. Implement the logic into `authenticate` method. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Authentication
-						authentication: true,
+						authentication: false,
 
 						// Enable authorization. Implement the logic into `authorize` method. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Authorization
-						authorization: true,
-
-						// The auto-alias feature allows you to declare your route alias directly in your services.
-						// The gateway will dynamically build the full routes from service schema.
-						autoAliases: true,
+						authorization: false,
 
 						aliases: {
-
+							"POST /auth/sign-up": "auth.signUp",
+							"GET /auth/confirm": "auth.confirmSignUp",
+							"POST /auth/login": "auth.login",
+							"POST /auth/forgot-password": "auth.forgotPassword",
 						},
 
 						// Calling options. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Calling-options
@@ -218,13 +213,14 @@ export default class ApiService extends Service {
 
 						if (token) {
 							try {
-								// TODO: Verify token
-								// Const decoded = await jwt.verify(token, Config.JWT_SECRET);
-								const user = await this.broker.call("users.resolveToken", { token });
-								if (user) {
-									ctx.meta.user = user;
-									return Promise.resolve(user);
-								}
+								// const decoded: jwt.JwtPayload = jwt.verify(token, Config.JWT_SECRET!) as jwt.JwtPayload;
+								// if (decoded) {
+								// 	const user = this.accountMixin.findOne({ id: decoded.id });
+								// 	if (user && Date.now() < decoded.exp! * 1000) {
+								// 		ctx.meta.user = user;
+								// 		return Promise.resolve(user);
+								// 	}
+								// }
 							} catch (error) {
 								this.logger.error("Authentication error", error);
 							}

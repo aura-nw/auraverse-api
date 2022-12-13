@@ -71,6 +71,14 @@ export const ErrorMap = {
         Code: "E012",
         Message: "Simulate transaction failed",
     },
+    E013: {
+        Code: "E013",
+        Message: "Code ID ownership hasn\'t been verified!",
+    },
+    E014: {
+        Code: "E014",
+        Message: "Project doesn\'t exist!",
+    },
     E400: {
         Code: "E400",
         Message: "Bad request",

@@ -12,7 +12,10 @@
     "lint": "eslint --ext .js,.ts .",
     "dc:up": "docker-compose up --build -d",
     "dc:logs": "docker-compose logs -f",
-    "dc:down": "docker-compose down"
+    "dc:down": "docker-compose down",
+    "migrate:generate": "knex migrate:make -x ts ",
+    "migrate:run": "knex migrate:latest",
+    "migrate:revert": "knex migrate:down"
   },
   "keywords": [
     "microservices",
@@ -51,6 +54,7 @@
     "@types/node": "^13.9.8",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.6",
+    "dotenv": "^16.0.3",
     "eslint-plugin-prettier": "^4.2.1",
     "generate-password": "^1.7.0",
     "ioredis": "^4.14.1",

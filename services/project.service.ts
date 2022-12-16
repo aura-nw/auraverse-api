@@ -1,12 +1,11 @@
+/* eslint-disable id-blacklist */
 /* eslint-disable camelcase */
 "use strict";
 
 import { Service, ServiceBroker, Context } from "moleculer";
-import * as bcrypt from "bcryptjs";
 import _ from "lodash";
 import { DatabaseCodeIdMixin, DatabaseProjectCodeIdMixin, DatabaseProjectMixin, DatabaseRequestMixin } from "../mixins/database";
 import {
-    AccountStatus,
     ApiConstants,
     CallApiMethod,
     ErrorMap,
@@ -18,10 +17,11 @@ import {
 } from "../common";
 import {
     CreateProjectRequest,
+    ListProjectsRequest,
     ResponseDto,
     UpdateProjectRequest,
 } from "../types";
-import { Account, CodeId, Project, Request } from "../models";
+import { CodeId, Project, Request } from "../models";
 import CallApiMixin from "../mixins/callapi/call-api.mixin";
 
 export default class ProjectService extends Service {
@@ -49,40 +49,78 @@ export default class ProjectService extends Service {
                     openapi: {
                         summary: "List a project on Auraverse",
                         description: "List a project on Auraverse",
+                        security: [{ bearerAuth: [] }],
                     },
                     params: {
                         accountId: "number",
                         codeIds: {
-                            type: "array|optional",
+                            type: "array",
                             items: "number",
+                            optional: true,
                         },
                         name: "string",
                         email: "string",
                         description: "string",
                         otherDocumentation: "string",
                         activeStatus: {
-                            type: "enum",
-                            values: ProjectActiveStatus.COMING_SOON,
+                            type: "string",
+                            enum: Object.values(ProjectActiveStatus),
                         },
                         website: "string",
                         imageLink: "string",
                         categories: {
                             type: "array",
-                            items: "enum",
-                            values: [ProjectCategories.ART, ProjectCategories.ANALYTICS],
+                            items: "string",
+                            enum: Object.values(ProjectCategories),
                         },
-                        whitepaper: "string|optional",
-                        github: "string|optional",
-                        telegram: "string|optional",
-                        wechat: "string|optional",
-                        linkedin: "string|optional",
-                        discord: "string|optional",
-                        medium: "string|optional",
-                        reddit: "string|optional",
-                        slack: "string|optional",
-                        facebook: "string|optional",
-                        twitter: "string|optional",
-                        bitcointalk: "string|optional",
+                        whitepaper: {
+                            type: "string",
+                            optional: true,
+                        },
+                        github: {
+                            type: "string",
+                            optional: true,
+                        },
+                        telegram: {
+                            type: "string",
+                            optional: true,
+                        },
+                        wechat: {
+                            type: "string",
+                            optional: true,
+                        },
+                        linkedin: {
+                            type: "string",
+                            optional: true,
+                        },
+                        discord: {
+                            type: "string",
+                            optional: true,
+                        },
+                        medium: {
+                            type: "string",
+                            optional: true,
+                        },
+                        reddit: {
+                            type: "string",
+                            optional: true,
+                        },
+                        slack: {
+                            type: "string",
+                            optional: true,
+                        },
+                        facebook: {
+                            type: "string",
+                            optional: true,
+                        },
+                        twitter: {
+                            type: "string",
+                            optional: true,
+                        },
+                        bitcointalk: {
+                            type: "string",
+                            optional: true,
+                        },
                     },
                     async handler(ctx: Context<CreateProjectRequest>): Promise<ResponseDto> {
                         return await this.createProject(ctx);
@@ -100,43 +138,139 @@ export default class ProjectService extends Service {
                     openapi: {
                         summary: "Update information of a project on Auraverse",
                         description: "Update information of a project on Auraverse",
+                        security: [{ bearerAuth: [] }],
                     },
                     params: {
                         projectId: "number",
                         codeIds: {
-                            type: "array|optional",
+                            type: "array",
                             items: "number",
+                            optional: true,
                         },
-                        name: "string|optional",
-                        email: "string|optional",
-                        description: "string|optional",
-                        otherDocumentation: "string|optional",
+                        name: {
+                            type: "string",
+                            optional: true,
+                        },
+                        email: {
+                            type: "string",
+                            optional: true,
+                        },
+                        description: {
+                            type: "string",
+                            optional: true,
+                        },
+                        otherDocumentation: {
+                            type: "string",
+                            optional: true,
+                        },
                         activeStatus: {
-                            type: "enum|optional",
-                            values: ProjectActiveStatus.COMING_SOON,
+                            type: "string",
+                            enum: Object.values(ProjectActiveStatus),
+                            optional: true,
                         },
-                        website: "string|optional",
-                        imageLink: "string|optional",
+                        website: {
+                            type: "string",
+                            optional: true,
+                        },
+                        imageLink: {
+                            type: "string",
+                            optional: true,
+                        },
                         categories: {
-                            type: "array|optional",
-                            items: "enum",
-                            values: [ProjectCategories.ART, ProjectCategories.ANALYTICS],
+                            type: "array",
+                            items: "string",
+                            enum: Object.values(ProjectCategories),
                         },
-                        whitepaper: "string|optional",
-                        github: "string|optional",
-                        telegram: "string|optional",
-                        wechat: "string|optional",
-                        linkedin: "string|optional",
-                        discord: "string|optional",
-                        medium: "string|optional",
-                        reddit: "string|optional",
-                        slack: "string|optional",
-                        facebook: "string|optional",
-                        twitter: "string|optional",
-                        bitcointalk: "string|optional",
+                        whitepaper: {
+                            type: "string",
+                            optional: true,
+                        },
+                        github: {
+                            type: "string",
+                            optional: true,
+                        },
+                        telegram: {
+                            type: "string",
+                            optional: true,
+                        },
+                        wechat: {
+                            type: "string",
+                            optional: true,
+                        },
+                        linkedin: {
+                            type: "string",
+                            optional: true,
+                        },
+                        discord: {
+                            type: "string",
+                            optional: true,
+                        },
+                        medium: {
+                            type: "string",
+                            optional: true,
+                        },
+                        reddit: {
+                            type: "string",
+                            optional: true,
+                        },
+                        slack: {
+                            type: "string",
+                            optional: true,
+                        },
+                        facebook: {
+                            type: "string",
+                            optional: true,
+                        },
+                        twitter: {
+                            type: "string",
+                            optional: true,
+                        },
+                        bitcointalk: {
+                            type: "string",
+                            optional: true,
+                        },
                     },
                     async handler(ctx: Context<UpdateProjectRequest>): Promise<ResponseDto> {
                         return await this.updateProject(ctx);
+                    },
+                },
+
+                /**
+                 * View your projects list
+                 */
+                listYourProjects: {
+                    rest: {
+                        method: CallApiMethod.GET,
+                        path: ApiConstants.LIST_YOUR,
+                    },
+                    openapi: {
+                        summary: "View your projects list",
+                        description: "View your projects list",
+                        security: [{ bearerAuth: [] }],
+                    },
+                    params: {
+                        accountId: "number",
+                    },
+                    async handler(ctx: Context<ListProjectsRequest>): Promise<ResponseDto> {
+                        return await this.listProjects(ctx);
+                    },
+                },
+
+                /**
+                 * View all projects
+                 */
+                listProjects: {
+                    rest: {
+                        method: CallApiMethod.GET,
+                        path: ApiConstants.LIST,
+                    },
+                    openapi: {
+                        summary: "View all projects",
+                        description: "View all projects",
+                    },
+                    params: {},
+                    async handler(): Promise<ResponseDto> {
+                        return await this.listProjects();
                     },
                 },
             },
@@ -148,39 +282,30 @@ export default class ProjectService extends Service {
         if (ctx.params.categories!.length > 4) {
             return ResponseDto.response(ErrorMap.E010, { request: ctx.params });
         }
+        if (ctx.params.codeIds!.length > 0) {
+            const codeIds = await this.codeIdMixin.find({ code_id: [...ctx.params.codeIds!] });
+            const missingCodeIds = _.difference(ctx.params.codeIds!, codeIds.map((c: CodeId) => c.codeId));
+            if (missingCodeIds.length > 0) {
+                return ResponseDto.response(ErrorMap.E013, { codeIds: missingCodeIds });
+            }
+        }
 
         let project = {} as Project;
-        // Const requestProject = _.omit(ctx.params, ["categories"]);
-        project = _.assign(project, ctx.params);
+        const requestProject = _.omit(ctx.params, ["codeIds", "categories"]);
+        project = _.assign(project, requestProject);
+        project.categories = JSON.stringify(ctx.params.categories);
         project.status = ProjectStatus.SUBMITTED;
         const insertedProject = await this.projectMixin.insert(project);
 
         let requestEntity = {} as Request;
-        const requestReq = _.omit(ctx.params, ["accountId", "codeIds"]);
+        const requestReq = _.omit(ctx.params, ["accountId", "codeIds", "categories", "activeStatus"]);
         requestEntity = _.assign(requestEntity, requestReq);
-        requestEntity.projectId = insertedProject.id;
+        requestEntity.projectId = insertedProject[0];
+        if (ctx.params.codeIds) { requestEntity.codeIds = JSON.stringify(ctx.params.codeIds); }
+        requestEntity.categories = JSON.stringify(ctx.params.categories);
         requestEntity.status = ProjectStatus.SUBMITTED;
         requestEntity.type = RequestType.CREATE;
         await this.requestMixin.insert(requestEntity);
-
-        if (ctx.params.codeIds) {
-            if (ctx.params.codeIds!.length > 0) {
-                const codeIds = await this.codeIdMixin.find({ code_id: [...ctx.params.codeIds!] });
-                const missingCodeIds = _.difference(ctx.params.codeIds!, codeIds.map((c: CodeId) => c.codeId));
-                if (missingCodeIds.length > 0) {
-                    return ResponseDto.response(ErrorMap.E013, { codeIds: missingCodeIds });
-                }
-
-                const listProjectCodeIds: any = [];
-                codeIds.map((c: CodeId) =>
-                    listProjectCodeIds.push(this.projectCodeIdMixin.insert({
-                        projectId: insertedProject.id,
-                        codeId: c.id,
-                    }))
-                );
-                await Promise.all(listProjectCodeIds);
-            }
-        }
 
         return ResponseDto.response(ErrorMap.SUCCESSFUL);
     }
@@ -193,8 +318,10 @@ export default class ProjectService extends Service {
         currentProject.status = ProjectStatus.SUBMITTED;
 
         let requestEntity = {} as Request;
-        const requestReq = _.omit(ctx.params, ["codeIds"]);
+        const requestReq = _.omit(ctx.params, ["codeIds", "categories"]);
         requestEntity = _.assign(requestEntity, requestReq);
+        if (ctx.params.codeIds) { requestEntity.codeIds = JSON.stringify(ctx.params.codeIds); }
+        requestEntity.categories = JSON.stringify(ctx.params.categories);
         requestEntity.status = ProjectStatus.SUBMITTED;
         requestEntity.type = RequestType.UPDATE;
         await Promise.all([
@@ -203,5 +330,11 @@ export default class ProjectService extends Service {
         ]);
 
         return ResponseDto.response(ErrorMap.SUCCESSFUL);
+    }
+
+    public async listProjects(ctx?: Context<ListProjectsRequest>): Promise<ResponseDto> {
+        return typeof ctx?.params.accountId !== undefined
+            ? await this.projectMixin.find()
+            : await this.projectMixin.find({ accountId: ctx?.params.accountId });
     }
 }

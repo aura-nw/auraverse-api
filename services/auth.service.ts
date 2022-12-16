@@ -120,15 +120,6 @@ export default class AuthService extends Service {
 			ctx.params.username!,
 			ctx.params.email!
 		);
-		if (existAccount) {
-			if (existAccount.username === ctx.params.username) {
-				return ResponseDto.response(ErrorMap.E001, { request: ctx.params });
-			}
-			if (existAccount.email === ctx.params.email) {
-				return ResponseDto.response(ErrorMap.E002, { request: ctx.params });
-			}
-		}
-
 		const token = jwt.sign({ request: ctx.params }, process.env.JWT_SECRET!);
 		const account = {
 			username: ctx.params.username,
@@ -138,17 +129,29 @@ export default class AuthService extends Service {
 			accountStatus: AccountStatus.WAITING,
 			confirmationToken: token,
 		} as Account;
+
+		if (existAccount) {
+			if (existAccount.accountStatus === AccountStatus.ACTIVATED) {
+				if (existAccount.username === ctx.params.username) {
+					return ResponseDto.response(ErrorMap.E001, { request: ctx.params });
+				}
+				if (existAccount.email === ctx.params.email) {
+					return ResponseDto.response(ErrorMap.E002, { request: ctx.params });
+				}
+			} else {
+				await this.accountMixin.update({ id: existAccount.id }, account);
+			}
+		} else { await this.accountMixin.insert(account); }
+
 		// TODO: Edit email content
 		await this.commonService.sendEmail(
 			ctx.params.email!,
 			"Confirm Auraverse account sign-up",
 			`<h1>Email Confirmation</h1>
         <p>Thank you for subscribing. Please confirm your email by clicking on the following link</p>
-        <a href=${process.env.BASE_URL}:${process.env.BASE_PORT}/public/${ModulePath.AUTH}/${ApiConstants.CONFIRM_SIGN_UP}?confirmationToken=${token}> 
-		Click here</a>
+        <a href=${process.env.APP_DOMAIN}/public/${ModulePath.AUTH}/confirm/${token}> Click here</a>
         </div>`
 		);
-		await this.accountMixin.insert(account);
 
 		return ResponseDto.response(ErrorMap.SENT_VERIFICATION, { account });
 	}
@@ -156,9 +159,21 @@ export default class AuthService extends Service {
 	public async confirmSignUp(ctx: Context<ConfirmSignUpRequest>): Promise<ResponseDto> {
 		const account: Account = await this.accountMixin.findOne({
 			confirmation_token: ctx.params.confirmationToken,
-			account_status: AccountStatus.WAITING,
 		});
-		if (!account) { return ResponseDto.response(ErrorMap.E003, { request: ctx.params.confirmationToken }); }
+
+		if (!account) { return ResponseDto.response(ErrorMap.E015, { request: ctx.params.confirmationToken }); }
+		else if (account.accountStatus !== AccountStatus.WAITING) {
+			return ResponseDto.response(ErrorMap.E003, { request: ctx.params.confirmationToken });
+		}
+		const decoded: jwt.JwtPayload = jwt.verify(
+			ctx.params.confirmationToken!,
+			process.env.JWT_SECRET!
+		) as jwt.JwtPayload;
+		if (decoded) {
+			if (Date.now() > decoded.exp! * 1000) {
+				return ResponseDto.response(ErrorMap.E003, { request: ctx.params.confirmationToken });
+			}
+		}
 		await this.accountMixin.update({ id: account.id }, { account_status: AccountStatus.ACTIVATED });
 
 		return ResponseDto.response(ErrorMap.SUCCESSFUL);
@@ -171,7 +186,7 @@ export default class AuthService extends Service {
 			return ResponseDto.response(ErrorMap.E005, { request: ctx.params });
 		}
 		if (!bcrypt.compareSync(ctx.params.password!, account.password!)) {
-			return ResponseDto.response(ErrorMap.E005, { request: ctx.params });
+			return ResponseDto.response(ErrorMap.E006, { request: ctx.params });
 		}
 		const token = jwt.sign({ id: account.id }, process.env.JWT_SECRET!, {
 			expiresIn: 86400, // Expires in 24 hours

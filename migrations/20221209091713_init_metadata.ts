@@ -7,6 +7,9 @@ import { AccountStatus, AccountType, ProjectActiveStatus, ProjectStatus, Request
 export async function up(knex: Knex) {
     await knex.schema.createTable("account", (table: any) => {
         table.increments("id").primary();
+        table.timestamp("created_at").defaultTo(knex.raw("current_timestamp")).notNullable();
+        table.timestamp("updated_at")
+            .defaultTo(knex.raw("current_timestamp on update current_timestamp")).notNullable();
         table.string("username").unique().notNullable();
         table.string("email").unique().notNullable();
         table.string("password").notNullable();
@@ -15,32 +18,35 @@ export async function up(knex: Knex) {
         table.enum("account_status", [AccountStatus.ACTIVATED, AccountStatus.WAITING])
             .defaultTo(AccountStatus.WAITING).notNullable();
         table.string("confirmation_token").nullable();
-
-        table.timestamps(true, true);
     });
 
     await knex.schema.createTable("code_id", (table: any) => {
         table.increments("id").primary();
+        table.timestamp("created_at").defaultTo(knex.raw("current_timestamp")).notNullable();
+        table.timestamp("updated_at")
+            .defaultTo(knex.raw("current_timestamp on update current_timestamp")).notNullable();
         table.integer("code_id").unique().notNullable();
         table.integer("account_id").notNullable();
         table.string("creator").notNullable();
         table.string("data_hash").notNullable();
-        table.text("data").notNullable();
+        table.longtext("data").notNullable();
         table.integer("mainnet_code_id").unique().nullable();
-
-        table.timestamps(true, true);
     });
 
     await knex.schema.createTable("project_code_id", (table: any) => {
         table.increments("id").primary();
+        table.timestamp("created_at").defaultTo(knex.raw("current_timestamp")).notNullable();
+        table.timestamp("updated_at")
+            .defaultTo(knex.raw("current_timestamp on update current_timestamp")).notNullable();
         table.integer("project_id").notNullable();
         table.integer("internal_code_id").notNullable();
-
-        table.timestamps(true, true);
     });
 
     await knex.schema.createTable("project", (table: any) => {
         table.increments("id").primary();
+        table.timestamp("created_at").defaultTo(knex.raw("current_timestamp")).notNullable();
+        table.timestamp("updated_at")
+            .defaultTo(knex.raw("current_timestamp on update current_timestamp")).notNullable();
         table.integer("account_id").notNullable();
         table.string("name").notNullable();
         table.string("email").notNullable();
@@ -66,13 +72,15 @@ export async function up(knex: Knex) {
         table.string("twitter").nullable();
         table.string("bitcointalk").nullable();
         table.boolean("is_new").defaultTo(true).notNullable();
-
-        table.timestamps(true, true);
     });
 
     await knex.schema.createTable("request", (table: any) => {
         table.increments("id").primary();
+        table.timestamp("created_at").defaultTo(knex.raw("current_timestamp")).notNullable();
+        table.timestamp("updated_at")
+            .defaultTo(knex.raw("current_timestamp on update current_timestamp")).notNullable();
         table.integer("project_id").notNullable();
+        table.json("codeIds").nullable();
         table.string("name").nullable();
         table.string("email").nullable();
         table.text("description").nullable();
@@ -95,8 +103,6 @@ export async function up(knex: Knex) {
         table.string("facebook").nullable();
         table.string("twitter").nullable();
         table.string("bitcointalk").nullable();
-
-        table.timestamps(true, true);
     });
 
     await knex("account").insert({

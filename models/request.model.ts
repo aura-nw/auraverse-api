@@ -1,6 +1,6 @@
 import { JSONSchema, snakeCaseMappers } from "objection";
 import { knex } from "../config/database";
-import { ProjectCategories, ProjectStatus, RequestType } from "../common";
+import { ProjectStatus, RequestType } from "../common";
 import { BaseModel } from "./base/base.model";
 
 export class Request extends BaseModel {
@@ -12,6 +12,7 @@ export class Request extends BaseModel {
             createdAt: { type: "timestamp", default: "now()" },
             updatedAt: { type: "timestamp", default: "now()" },
             projectId: { type: "integer" },
+            codeIds: { type: "string" },
             name: { type: "string", minLength: 1, maxLength: 255 },
             email: { type: "string", minLength: 1, maxLength: 255 },
             description: { type: "text" },
@@ -28,19 +29,7 @@ export class Request extends BaseModel {
             },
             website: { type: "string", minLength: 1, maxLength: 255 },
             imageLink: { type: "string", minLength: 1, maxLength: 255 },
-            categories: {
-                type: "array",
-                items: {
-                    type: "string",
-                    enum: [ProjectCategories.DEFI, ProjectCategories.ANALYTICS, ProjectCategories.ART,
-                        ProjectCategories.AVATAR, ProjectCategories.COLLECTIBLE, ProjectCategories.DAO,
-                        ProjectCategories.EXCHANGE, ProjectCategories.FASHION, ProjectCategories.MARKETPLACE,
-                        ProjectCategories.FUNGIBLE_TOKEN, ProjectCategories.GALLERIES, ProjectCategories.GAME,
-                        ProjectCategories.MOBILE_APP, ProjectCategories.MUSIC, ProjectCategories.NFT_COLLECTION,
-                        ProjectCategories.SPORTS, ProjectCategories.THREE_D_WORLD, ProjectCategories.TOOLS,
-                        ProjectCategories.WALLETS],
-                },
-            },
+            categories: { type: "string" },
             whitepaper: { type: "string", minLength: 1, maxLength: 255 },
             github: { type: "string", minLength: 1, maxLength: 255 },
             telegram: { type: "string", minLength: 1, maxLength: 255 },
@@ -58,6 +47,7 @@ export class Request extends BaseModel {
     };
 
     public projectId: number | undefined;
+    public codeIds: string | undefined;
     public name: string | undefined;
     public email: string | undefined;
     public description: string | undefined;
@@ -66,7 +56,7 @@ export class Request extends BaseModel {
     public type: RequestType | undefined;
     public website: string | undefined;
     public imageLink: string | undefined;
-    public categories: ProjectCategories[] | undefined;
+    public categories: string | undefined;
     public whitepaper: string | undefined;
     public github: string | undefined;
     public telegram: string | undefined;

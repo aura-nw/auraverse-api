@@ -37,6 +37,7 @@ export default class AccountService extends Service {
                     openapi: {
                         summary: "Change account's password",
                         description: "Change account's password",
+                        security: [{ bearerAuth: [] }],
                     },
                     params: {
                         username: "string",
@@ -59,6 +60,7 @@ export default class AccountService extends Service {
                     openapi: {
                         summary: "Change account's email",
                         description: "Change account's email",
+                        security: [{ bearerAuth: [] }],
                     },
                     params: {
                         username: "string",
@@ -81,6 +83,7 @@ export default class AccountService extends Service {
                     openapi: {
                         summary: "Claim ownership of a code id for an account",
                         description: "Claim ownership of a code id for an account",
+                        security: [{ bearerAuth: [] }],
                     },
                     params: {
                         codeId: "number",
@@ -138,7 +141,7 @@ export default class AccountService extends Service {
         if (codeIdAurascan.contract_verification === ContractVerification.UNVERIFIED) {
             return ResponseDto.response(ErrorMap.E008, { request: ctx.params });
         }
-        if (codeIdDb.length > 0) { return ResponseDto.response(ErrorMap.E009, { request: ctx.params }); }
+        if (codeIdDb) { return ResponseDto.response(ErrorMap.E009, { request: ctx.params }); }
 
         if (!ctx.params.accountId || ctx.params.accountId === 0) { return ResponseDto.response(ErrorMap.CHECK_CODE_ID, { data: codeIdOnChain }); }
 

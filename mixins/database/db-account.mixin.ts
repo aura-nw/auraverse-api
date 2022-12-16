@@ -12,9 +12,8 @@ export class DatabaseAccountMixin extends DatabaseMixin {
     }
 
     public async checkExistAccount(username: string, email: string): Promise<any> {
-        return await knex(this.model).select("*").
-            where({ account_status: AccountStatus.ACTIVATED })
-            .andWhere((builder: any) =>
+        return await knex(this.model).select("*")
+            .where((builder: any) =>
                 builder.where({ username }).orWhere({ email })
             ).first();
     }

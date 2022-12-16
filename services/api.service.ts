@@ -9,10 +9,13 @@ import helmet from "helmet";
 import * as dotenv from "dotenv";
 import { Config } from "../common";
 import { RequestMessage } from "../types";
+import { DatabaseAccountMixin } from "../mixins/database";
 
 dotenv.config();
 
 export default class ApiService extends Service {
+	private accountMixin = new DatabaseAccountMixin();
+
 	public constructor(broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
@@ -76,9 +79,15 @@ export default class ApiService extends Service {
 							maxAge: 3600,
 						},
 						aliases: {
+							// Account
 							"POST /account/change-password": "account.changePassword",
 							"POST /account/change-email": "account.changeEmail",
 							"POST /account/verify-code-id-ownership": "account.verifyCodeIdOwnership",
+
+							// Project
+							"POST /project/create": "project.createProject",
+							"POST /project/update": "project.updateProject",
+							"GET /project/list/:accountId": "project.listYourProjects",
 						},
 						/**
 						 * Before call hook. You can check the request.
@@ -142,10 +151,14 @@ export default class ApiService extends Service {
 						authorization: false,
 
 						aliases: {
+							// Auth
 							"POST /auth/sign-up": "auth.signUp",
-							"GET /auth/confirm": "auth.confirmSignUp",
+							"GET /auth/confirm/:confirmationToken": "auth.confirmSignUp",
 							"POST /auth/login": "auth.login",
 							"POST /auth/forgot-password": "auth.forgotPassword",
+
+							// Project
+							"GET /project/list": "project.listProjects",
 						},
 
 						// Calling options. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Calling-options
@@ -196,12 +209,31 @@ export default class ApiService extends Service {
 				 * @param {any} route
 				 * @param {IncomingMessage} req
 				 * @returns {Promise}
-				 */
+
 				authenticate: async (
 					ctx: Context<Record<string, unknown>, any>,
 					route: any,
 					req: RequestMessage,
 				): Promise<unknown> => {
+
+				},
+				 */
+
+				/**
+				 * Authorize the request. Check that the authenticated user has right to access the resource.
+				 *
+				 * PLEASE NOTE, IT'S JUST AN EXAMPLE IMPLEMENTATION. DO NOT USE IN PRODUCTION!
+				 *
+				 * @param {Context} ctx
+				 * @param {Object} route
+				 * @param {IncomingMessage} req
+				 * @returns {Promise}
+				 */
+				authorize: async (
+					ctx: Context<Record<string, unknown>, any>,
+					route: any,
+					req: RequestMessage
+				): Promise<any> => {
 					const auth = req.headers.authorization;
 
 					if (auth) {
@@ -213,14 +245,14 @@ export default class ApiService extends Service {
 
 						if (token) {
 							try {
-								// const decoded: jwt.JwtPayload = jwt.verify(token, Config.JWT_SECRET!) as jwt.JwtPayload;
-								// if (decoded) {
-								// 	const user = this.accountMixin.findOne({ id: decoded.id });
-								// 	if (user && Date.now() < decoded.exp! * 1000) {
-								// 		ctx.meta.user = user;
-								// 		return Promise.resolve(user);
-								// 	}
-								// }
+								const decoded: jwt.JwtPayload = jwt.verify(token, Config.JWT_SECRET!) as jwt.JwtPayload;
+								if (decoded) {
+									const user = await this.accountMixin.findOne({ id: decoded.id });
+									if (user && Date.now() < decoded.exp! * 1000) {
+										ctx.meta.user = user;
+										return Promise.resolve(user);
+									}
+								}
 							} catch (error) {
 								this.logger.error("Authentication error", error);
 							}
@@ -231,32 +263,6 @@ export default class ApiService extends Service {
 					console.log("Authentication auth failed");
 					return Promise.reject(new ApiGateway.Errors.UnAuthorizedError(ApiGateway.Errors.ERR_NO_TOKEN, null));
 				},
-
-				/**
-				 * Authorize the request. Check that the authenticated user has right to access the resource.
-				 *
-				 * PLEASE NOTE, IT'S JUST AN EXAMPLE IMPLEMENTATION. DO NOT USE IN PRODUCTION!
-				 *
-				 * @param {Context} ctx
-				 * @param {Object} route
-				 * @param {IncomingMessage} req
-				 * @returns {Promise}
-
-				async authorize (ctx: Context < any, {
-					user: string;
-				} > , route: Record<string, undefined>, req: IncomingMessage): Promise < any > => {
-					// Get the authenticated user.
-					const user = ctx.meta.user;
-
-					// It check the `auth` property in action schema.
-					// @ts-ignore
-					if (req.$action.auth === "required" && !user) {
-						throw new ApiGateway.Errors.UnAuthorizedError("NO_RIGHTS", {
-							error: "Unauthorized",
-						});
-					}
-				},
-				 */
 			},
 
 		});

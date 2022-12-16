@@ -1,3 +1,4 @@
+/* eslint-disable id-blacklist */
 import { knex } from "../../config/database";
 
 export class DatabaseMixin {
@@ -15,12 +16,16 @@ export class DatabaseMixin {
 		return await knex(this.tableName).where(where).update(data);
 	}
 
-	public async findOne(where: any): Promise<any> {
-		return await knex(this.tableName).select("*").where(where).first();
+	public async findOne(where?: any): Promise<any> {
+		return typeof where !== undefined
+			? await knex(this.tableName).select("*").where(where).first()
+			: await knex(this.tableName).select("*").first();
 	}
 
-	public async find(where: any): Promise<any> {
-		return await knex(this.tableName).select("*").where(where);
+	public async find(where?: any): Promise<any> {
+		return typeof where !== undefined
+			? await knex(this.tableName).select("*").where(where)
+			: await knex(this.tableName).select("*");
 	}
 
 	public async delete(where: any): Promise<any> {

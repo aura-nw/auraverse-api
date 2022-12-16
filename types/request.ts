@@ -47,7 +47,7 @@ export class CreateProjectRequest {
     public activeStatus: ProjectActiveStatus | undefined;
     public website: string | undefined;
     public imageLink: string | undefined;
-    public categories: ProjectCategories[] | undefined;
+    public categories: string[] | undefined;
     public whitepaper: string | undefined;
     public github: string | undefined;
     public telegram: string | undefined;
@@ -85,4 +85,8 @@ export class UpdateProjectRequest {
     public facebook: string | undefined;
     public twitter: string | undefined;
     public bitcointalk: string | undefined;
+}
+
+export class ListProjectsRequest {
+    public accountId: number | undefined;
 }

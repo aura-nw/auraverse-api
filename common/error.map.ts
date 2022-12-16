@@ -79,6 +79,14 @@ export const ErrorMap = {
         Code: "E014",
         Message: "Project doesn\'t exist!",
     },
+    E015: {
+        Code: "E015",
+        Message: "Account doesn\'t exist!",
+    },
+    E016: {
+        Code: "E016",
+        Message: "Confirmation token expired! Please sign up your account again.",
+    },
     E400: {
         Code: "E400",
         Message: "Bad request",

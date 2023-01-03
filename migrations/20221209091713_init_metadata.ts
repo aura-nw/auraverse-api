@@ -79,6 +79,7 @@ export async function up(knex: Knex) {
         table.timestamp("created_at").defaultTo(knex.raw("current_timestamp")).notNullable();
         table.timestamp("updated_at")
             .defaultTo(knex.raw("current_timestamp on update current_timestamp")).notNullable();
+        table.integer("account_id").notNullable();
         table.integer("project_id").notNullable();
         table.json("codeIds").nullable();
         table.string("name").nullable();
@@ -86,6 +87,8 @@ export async function up(knex: Knex) {
         table.text("description").nullable();
         table.text("other_documentation").nullable();
         table.enum("status", [ProjectStatus.APPROVED, ProjectStatus.REJECTED, ProjectStatus.SUBMITTED]).nullable();
+        table.enum("active_status", [ProjectActiveStatus.COMING_SOON, ProjectActiveStatus.RELEASED])
+            .defaultTo(ProjectActiveStatus.COMING_SOON).notNullable();
         table.enum("type", [RequestType.CREATE, RequestType.DELETE, RequestType.UPDATE, RequestType.STORE_CODE_ID])
             .defaultTo(RequestType.CREATE).nullable();
         table.text("website").nullable();

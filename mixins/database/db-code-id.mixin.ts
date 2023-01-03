@@ -1,3 +1,4 @@
+import { knex } from "../../config/database";
 import { DbTable } from "../../common";
 import { DatabaseMixin } from "./db-base.mixin";
 
@@ -6,5 +7,11 @@ export class DatabaseCodeIdMixin extends DatabaseMixin {
 
     public constructor() {
         super(DbTable.CODE_ID);
+    }
+
+    public async getCodeIdsByProjectId(projectId: number): Promise<any> {
+        return await knex(this.model)
+            .join(DbTable.PROJECT_CODE_ID, `${this.model}.id`, `${DbTable.PROJECT_CODE_ID}.internal_code_id`)
+            .select("*").where({ projectId });
     }
 }

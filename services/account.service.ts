@@ -113,7 +113,7 @@ export default class AccountService extends Service {
     }
 
     public async changeEmail(ctx: Context<ChangeEmailRequest>): Promise<ResponseDto> {
-        const [account, existEmails] = await Promise.all([
+        const [account, existEmails]: [Account, Account[]] = await Promise.all([
             this.accountMixin.findOne({ username: ctx.params.username }),
             this.accountMixin.find({ email: ctx.params.newEmail }),
         ]);
@@ -123,7 +123,7 @@ export default class AccountService extends Service {
         }
         if (existEmails.length > 0) { return ResponseDto.response(ErrorMap.E002, { request: ctx.params }); }
         else if (!ctx.params.password) { return ResponseDto.response(ErrorMap.EMAIL_VALID); }
-        if (!bcrypt.compareSync(ctx.params.password, account.password)) {
+        if (!bcrypt.compareSync(ctx.params.password, account.password!)) {
             return ResponseDto.response(ErrorMap.E006, { request: ctx.params });
         }
         await this.accountMixin.update({ id: account.id }, { email: ctx.params.newEmail });
@@ -132,7 +132,7 @@ export default class AccountService extends Service {
     }
 
     public async verifyCodeIdOwnership(ctx: Context<VerifyCodeIdOwnershipRequest>): Promise<ResponseDto> {
-        const [codeIdOnChain, codeIdAurascan, codeIdDb] = await Promise.all([
+        const [codeIdOnChain, codeIdAurascan, codeIdDb]: [any, any, CodeId] = await Promise.all([
             this.callApiFromDomain([process.env.LCD], `${ApiQuery.GET_DATA_CODE_ID}${ctx.params.codeId}`),
             this.callApiFromDomain([process.env.AURASCAN_API], `${ApiQuery.GET_CODE_ID_VERIFICATION}${ctx.params.codeId}`),
             this.codeIdMixin.findOne({ code_id: ctx.params.codeId }),

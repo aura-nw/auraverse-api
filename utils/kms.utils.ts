@@ -12,7 +12,7 @@ export class KMSSigner {
   private kmsSignApiUrl = "";
   private kmsConnectApiUrl = "";
 
-  private constructor(alias: string) {
+  public constructor(alias: string) {
     const kmsApiUrl = `${Config.KMS_API_BASE_URL}/kms/${alias}`;
     this.kmsSignApiUrl = `${kmsApiUrl}/sign`;
     this.kmsConnectApiUrl = `${kmsApiUrl}/connect`;

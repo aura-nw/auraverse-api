@@ -1,6 +1,6 @@
 import { JSONSchema, snakeCaseMappers } from "objection";
 import { knex } from "../config/database";
-import { ProjectStatus, RequestType } from "../common";
+import { ProjectActiveStatus, ProjectStatus, RequestType } from "../common";
 import { BaseModel } from "./base/base.model";
 
 export class Request extends BaseModel {
@@ -11,6 +11,7 @@ export class Request extends BaseModel {
             id: { type: "integer" },
             createdAt: { type: "timestamp", default: "now()" },
             updatedAt: { type: "timestamp", default: "now()" },
+            accountId: { type: "integer" },
             projectId: { type: "integer" },
             codeIds: { type: "string" },
             name: { type: "string", minLength: 1, maxLength: 255 },
@@ -21,6 +22,11 @@ export class Request extends BaseModel {
                 type: "string",
                 enum: [ProjectStatus.SUBMITTED, ProjectStatus.APPROVED, ProjectStatus.REJECTED],
                 default: ProjectStatus.SUBMITTED,
+            },
+            activeStatus: {
+                type: "string",
+                enum: [ProjectActiveStatus.COMING_SOON, ProjectActiveStatus.RELEASED],
+                default: ProjectActiveStatus.COMING_SOON,
             },
             type: {
                 type: "string",
@@ -46,6 +52,7 @@ export class Request extends BaseModel {
         },
     };
 
+    public accountId: number | undefined;
     public projectId: number | undefined;
     public codeIds: string | undefined;
     public name: string | undefined;
@@ -53,6 +60,7 @@ export class Request extends BaseModel {
     public description: string | undefined;
     public otherDocumentation: string | undefined;
     public status: ProjectStatus | undefined;
+    public activeStatus: ProjectActiveStatus | undefined;
     public type: RequestType | undefined;
     public website: string | undefined;
     public imageLink: string | undefined;

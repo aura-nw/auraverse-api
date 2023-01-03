@@ -23,6 +23,14 @@ export const ErrorMap = {
         Code: "SUCCESSFUL",
         Message: "Code ID ownership is verified!",
     },
+    REQUEST_REJECTED: {
+        Code: "SUCCESSFUL",
+        Message: "Reject request successful!",
+    },
+    REQUEST_CONFIRMED: {
+        Code: "SUCCESSFUL",
+        Message: "Confirm request successful!",
+    },
     E001: {
         Code: "E001",
         Message: "Username has been taken!",
@@ -86,6 +94,14 @@ export const ErrorMap = {
     E016: {
         Code: "E016",
         Message: "Confirmation token expired! Please sign up your account again.",
+    },
+    E017: {
+        Code: "E017",
+        Message: "Project had just been submitted! Unable to update!",
+    },
+    E018: {
+        Code: "E018",
+        Message: "Request doesn\'t exist!",
     },
     E400: {
         Code: "E400",

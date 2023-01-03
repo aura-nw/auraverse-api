@@ -15,6 +15,7 @@ export class CodeId extends BaseModel {
             creator: { type: "string", minLength: 1, maxLength: 255 },
             dataHash: { type: "string", minLength: 1, maxLength: 255 },
             data: { type: "longtext" },
+            mainnetCodeId: { type: "integer" },
         },
     };
 

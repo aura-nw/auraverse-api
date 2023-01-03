@@ -17,15 +17,17 @@ export class DatabaseMixin {
 	}
 
 	public async findOne(where?: any): Promise<any> {
-		return typeof where !== undefined
+		return where
 			? await knex(this.tableName).select("*").where(where).first()
 			: await knex(this.tableName).select("*").first();
 	}
 
-	public async find(where?: any): Promise<any> {
-		return typeof where !== undefined
+	public async find(where?: any, limit?: number, offset?: number): Promise<any> {
+		return where
 			? await knex(this.tableName).select("*").where(where)
-			: await knex(this.tableName).select("*");
+				.limit(limit ? limit : 10).offset(offset ? offset : 0)
+			: await knex(this.tableName).select("*")
+				.limit(limit ? limit : 10).offset(offset ? offset : 0);
 	}
 
 	public async delete(where: any): Promise<any> {

@@ -1,12 +1,15 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable id-blacklist */
+import { StdFee } from "@cosmjs/stargate";
 import * as dotenv from "dotenv";
+import { Network } from "./network.utils";
 const nodemailer = require("nodemailer");
 
 dotenv.config();
 
 export class Common {
     private transporter: any;
+    private network: Network = {} as Network;
 
     public async getTransport(transporter: any) {
         if (transporter === undefined) {
@@ -38,5 +41,13 @@ export class Common {
         } catch (error) {
             throw error;
         }
+    }
+
+    public async storeCode(senderAddress: string, wasmCode: Uint8Array, fee: StdFee | "auto" | number) {
+        const result = await this.network.upload(senderAddress, wasmCode, fee);
+        if (!result.codeId) {
+            throw result;
+        }
+        return result.codeId;
     }
 }

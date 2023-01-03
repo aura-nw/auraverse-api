@@ -45,6 +45,7 @@
     "moleculer-repl": "^0.6.2",
     "mysql2": "^2.3.3",
     "pako": "^2.1.0",
+    "prettier": "^2.8.1",
     "ts-jest": "^25.3.0",
     "ts-node": "^8.8.1"
   },
@@ -53,6 +54,7 @@
     "@types/mkdirp": "^1.0.0",
     "@types/node": "^13.9.8",
     "bcryptjs": "^2.4.3",
+    "bull": "^4.10.2",
     "cookie-parser": "^1.4.6",
     "dotenv": "^16.0.3",
     "eslint-plugin-prettier": "^4.2.1",

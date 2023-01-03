@@ -10,6 +10,10 @@ export enum ApiConstants {
     UPDATE = "update",
     LIST = "list",
     LIST_YOUR = "list/:accountId",
+    DETAILS = "details/:id",
+    CONFIRM = "confirm",
+    REJECT = "reject",
+    REQUEST_STORE_CODE_ID = "store-code-id"
 }
 
 export enum ModulePath {
@@ -17,4 +21,5 @@ export enum ModulePath {
     AUTH = "auth",
     ACCOUNT = "account",
     PROJECT = "project",
+    REQUEST = "request",
 }

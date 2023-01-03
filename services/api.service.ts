@@ -1,13 +1,14 @@
 /* eslint-disable capitalized-comments */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
+import { ServerResponse } from "http";
 import * as jwt from "jsonwebtoken";
 import { Service, ServiceBroker, Context } from "moleculer";
 import ApiGateway from "moleculer-web";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import * as dotenv from "dotenv";
-import { Config } from "../common";
+import { AccountType, Config } from "../common";
 import { RequestMessage } from "../types";
 import { DatabaseAccountMixin } from "../mixins/database";
 
@@ -138,6 +139,85 @@ export default class ApiService extends Service {
 						logging: true,
 					},
 					{
+						path: "/admin",
+						// Route-level Express middlewares. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Middlewares
+						use: [],
+						// Enable/disable parameter merging method. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Disable-merging
+						mergeParams: true,
+
+						// Enable authentication. Implement the logic into `authenticate` method. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Authentication
+						authentication: true,
+
+						// Enable authorization. Implement the logic into `authorize` method. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Authorization
+						authorization: true,
+						cors: {
+							origin: ["*"],
+							methods: ["GET", "OPTIONS", "POST", "PUT", "DELETE"],
+							credentials: true,
+							maxAge: 3600,
+						},
+						roles: [AccountType.ADMIN],
+						aliases: {
+
+						},
+						/**
+						 * Before call hook. You can check the request.
+						 * @param {Context} ctx
+						 * @param {Object} route
+						 * @param {IncomingMessage} req
+						 * @param {ServerResponse} res
+						 * @param {Object} data
+						 */
+						onBeforeCall(
+							ctx: Context<Record<string, unknown>, any>,
+							route: any,
+							req: RequestMessage
+						) {
+							this.logger.info("onBeforeCall in protected route");
+							ctx.meta.authToken = req.headers.authorization;
+						},
+
+						/**
+						 * After call hook. You can modify the data.
+						 * @param {Context} ctx
+						 * @param {Object} route
+						 * @param {IncomingMessage} req
+						 * @param {ServerResponse} res
+						 * @param {Object} data
+						 */
+						onAfterCall(
+							ctx: Context<Record<string, unknown>, any>,
+							route: any,
+							req: RequestMessage,
+							res: ServerResponse,
+							data: Record<string, any>
+						) {
+							this.logger.info("onAfterCall in protected route");
+							res.setHeader("X-Custom-Header", "Authorized path");
+							return data;
+						},
+
+						// Calling options. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Calling-options
+						callingOptions: {},
+
+						bodyParsers: {
+							json: {
+								strict: false,
+								limit: "1MB",
+							},
+							urlencoded: {
+								extended: true,
+								limit: "1MB",
+							},
+						},
+
+						// Mapping policy setting. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Mapping-policy
+						mappingPolicy: Config.MAPPING_POLICY, // Available values: "all", "restrict"
+
+						// Enable/disable logging
+						logging: true,
+					},
+					{
 						path: "/public",
 						// Route-level Express middlewares. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Middlewares
 						use: [],
@@ -159,6 +239,7 @@ export default class ApiService extends Service {
 
 							// Project
 							"GET /project/list": "project.listProjects",
+							"GET /project/details/:id": "project.projectDetails",
 						},
 
 						// Calling options. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Calling-options
@@ -247,6 +328,12 @@ export default class ApiService extends Service {
 							try {
 								const decoded: jwt.JwtPayload = jwt.verify(token, Config.JWT_SECRET!) as jwt.JwtPayload;
 								if (decoded) {
+									if (route.opts.roles) {
+										if (route.opts.roles.indexOf(decoded.accountType) === -1) {
+											return Promise.reject(new ApiGateway.Errors.UnAuthorizedError("Permission denied!", null));
+										}
+									}
+
 									const user = await this.accountMixin.findOne({ id: decoded.id });
 									if (user && Date.now() < decoded.exp! * 1000) {
 										ctx.meta.user = user;

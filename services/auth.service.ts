@@ -207,14 +207,16 @@ export default class AuthService extends Service {
 			symbols: true,
 			excludeSimilarCharacters: true,
 		});
-		await this.commonService.sendEmail(
-			ctx.params.email!,
-			"Reset Auraverse password",
-			`<h1>New Password</h1>
+		await Promise.all([
+			this.commonService.sendEmail(
+				ctx.params.email!,
+				"Reset Auraverse password",
+				`<h1>New Password</h1>
         <p>Your new password is: ${newPassword}</p>
         </div>`
-		);
-		await this.accountMixin.update({ id: account.id }, { password: bcrypt.hashSync(newPassword, 8) });
+			),
+			this.accountMixin.update({ id: account.id }, { password: bcrypt.hashSync(newPassword, 8) }),
+		]);
 
 		return ResponseDto.response(ErrorMap.SENT_NEW_PASSWORD);
 	}

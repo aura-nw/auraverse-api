@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { AccountStatus, DbTable } from "../../common";
+import { DbTable } from "../../common";
 import { knex } from "../../config/database";
 import { DatabaseMixin } from "./db-base.mixin";
 

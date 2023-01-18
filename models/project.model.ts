@@ -1,6 +1,5 @@
-import { JSONSchema, snakeCaseMappers } from "objection";
-import { knex } from "../config/database";
-import { ProjectActiveStatus, ProjectCategories, ProjectStatus } from "../common";
+import { JSONSchema } from "objection";
+import { ProjectActiveStatus, ProjectStatus } from "../common";
 import { BaseModel } from "./base/base.model";
 
 export class Project extends BaseModel {
@@ -79,12 +78,6 @@ export class Project extends BaseModel {
     public twitter: string | undefined;
     public bitcointalk: string | undefined;
     public isNew: boolean | undefined;
-
-    public static get columnNameMappers() {
-        return snakeCaseMappers();
-    }
 }
-
-Project.knex(knex);
 
 module.exports = Project;

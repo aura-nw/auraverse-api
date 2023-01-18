@@ -1,5 +1,4 @@
-import { JSONSchema, snakeCaseMappers } from "objection";
-import { knex } from "../config/database";
+import { JSONSchema } from "objection";
 import { BaseModel } from "./base/base.model";
 
 export class ProjectCodeId extends BaseModel {
@@ -17,12 +16,6 @@ export class ProjectCodeId extends BaseModel {
 
     public projectId: number | undefined;
     public internalCodeId: number | undefined;
-
-    public static get columnNameMappers() {
-        return snakeCaseMappers();
-    }
 }
-
-ProjectCodeId.knex(knex);
 
 module.exports = ProjectCodeId;

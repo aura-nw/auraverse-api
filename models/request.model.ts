@@ -1,12 +1,11 @@
-import { JSONSchema, snakeCaseMappers } from "objection";
-import { knex } from "../config/database";
+import { JSONSchema } from "objection";
 import { ProjectActiveStatus, ProjectStatus, RequestType } from "../common";
 import { BaseModel } from "./base/base.model";
 
 export class Request extends BaseModel {
     public static jsonSchema: JSONSchema = {
         type: "object",
-        required: ["projectId"],
+        required: ["projectId", "accountId"],
         properties: {
             id: { type: "integer" },
             createdAt: { type: "timestamp", default: "now()" },
@@ -20,13 +19,12 @@ export class Request extends BaseModel {
             otherDocumentation: { type: "text" },
             status: {
                 type: "string",
-                enum: [ProjectStatus.SUBMITTED, ProjectStatus.APPROVED, ProjectStatus.REJECTED],
-                default: ProjectStatus.SUBMITTED,
+                enum: [ProjectStatus.SUBMITTED, ProjectStatus.APPROVED, ProjectStatus.REJECTED,
+                ProjectStatus.PROCESSING, ProjectStatus.ERROR],
             },
             activeStatus: {
                 type: "string",
                 enum: [ProjectActiveStatus.COMING_SOON, ProjectActiveStatus.RELEASED],
-                default: ProjectActiveStatus.COMING_SOON,
             },
             type: {
                 type: "string",
@@ -77,12 +75,6 @@ export class Request extends BaseModel {
     public facebook: string | undefined;
     public twitter: string | undefined;
     public bitcointalk: string | undefined;
-
-    public static get columnNameMappers() {
-        return snakeCaseMappers();
-    }
 }
-
-Request.knex(knex);
 
 module.exports = Request;

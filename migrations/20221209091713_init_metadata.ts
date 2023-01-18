@@ -86,11 +86,11 @@ export async function up(knex: Knex) {
         table.string("email").nullable();
         table.text("description").nullable();
         table.text("other_documentation").nullable();
-        table.enum("status", [ProjectStatus.APPROVED, ProjectStatus.REJECTED, ProjectStatus.SUBMITTED]).nullable();
-        table.enum("active_status", [ProjectActiveStatus.COMING_SOON, ProjectActiveStatus.RELEASED])
-            .defaultTo(ProjectActiveStatus.COMING_SOON).notNullable();
+        table.enum("status", [ProjectStatus.APPROVED, ProjectStatus.REJECTED, ProjectStatus.SUBMITTED,
+        ProjectStatus.PROCESSING, ProjectStatus.ERROR]).nullable();
+        table.enum("active_status", [ProjectActiveStatus.COMING_SOON, ProjectActiveStatus.RELEASED]).nullable();
         table.enum("type", [RequestType.CREATE, RequestType.DELETE, RequestType.UPDATE, RequestType.STORE_CODE_ID])
-            .defaultTo(RequestType.CREATE).nullable();
+            .notNullable();
         table.text("website").nullable();
         table.text("image_link").nullable();
         table.json("categories").nullable();

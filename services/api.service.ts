@@ -89,6 +89,10 @@ export default class ApiService extends Service {
 							"POST /project/create": "project.createProject",
 							"POST /project/update": "project.updateProject",
 							"GET /project/list/:accountId": "project.listYourProjects",
+
+							// Request
+							"GET /request/list/:accountId": "request.listYourRequests",
+							"GET /request/details/:id": "request.requestDetails",
 						},
 						/**
 						 * Before call hook. You can check the request.
@@ -158,7 +162,10 @@ export default class ApiService extends Service {
 						},
 						roles: [AccountType.ADMIN],
 						aliases: {
-
+							// Request
+							"GET /request/list": "request.listRequests",
+							"POST /request/confirm": "request.confirmRequest",
+							"POST /request/reject": "request.rejectRequest",
 						},
 						/**
 						 * Before call hook. You can check the request.

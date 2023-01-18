@@ -54,11 +54,11 @@ export enum ProjectActiveStatus {
 }
 
 export enum ProjectStatus {
-    SUBMITTED = "Submitted",
-    APPROVED = "Approved",
-    REJECTED = "Rejected",
-    ERROR = "Error",
-    PROCESSING = "Processing",
+    SUBMITTED = "SUBMITTED",
+    APPROVED = "APPROVED",
+    REJECTED = "REJECTED",
+    ERROR = "ERROR",
+    PROCESSING = "PROCESSING",
 }
 
 export enum ProjectCategories {

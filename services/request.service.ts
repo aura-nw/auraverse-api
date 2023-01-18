@@ -1,3 +1,5 @@
+/* eslint-disable id-blacklist */
+/* eslint-disable no-underscore-dangle */
 /* eslint-disable camelcase */
 "use strict";
 
@@ -15,12 +17,16 @@ import {
     StoreCodeIdRequest,
 } from "../types";
 import CallApiMixin from "../mixins/callapi/call-api.mixin";
-import { DatabaseCodeIdMixin, DatabaseProjectCodeIdMixin, DatabaseProjectMixin, DatabaseRequestMixin } from "../mixins/database";
+import { DatabaseAccountMixin, DatabaseCodeIdMixin, DatabaseProjectCodeIdMixin, DatabaseProjectMixin, DatabaseRequestMixin } from "../mixins/database";
 import { Common, KMSSigner, Network } from "../utils";
-import { CodeId, Project, ProjectCodeId, Request } from "../models";
+import { Account, CodeId, Project, ProjectCodeId, Request } from "../models";
+import { queueConfig } from "../config/queue";
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require("moleculer-bull");
 
 export default class RequestService extends Service {
     private callApiMixin = new CallApiMixin().start();
+    private accountMixin = new DatabaseAccountMixin();
     private requestMixin = new DatabaseRequestMixin();
     private projectMixin = new DatabaseProjectMixin();
     private codeIdMixin = new DatabaseCodeIdMixin();
@@ -31,7 +37,10 @@ export default class RequestService extends Service {
         super(broker);
         this.parseServiceSchema({
             name: ModulePath.REQUEST,
-            mixins: [this.callApiMixin],
+            mixins: [
+                queueService(queueConfig.redis, queueConfig.opts),
+                this.callApiMixin,
+            ],
             actions: {
                 /**
                  * View your requests
@@ -238,17 +247,9 @@ export default class RequestService extends Service {
 
     // Action
     public async listRequests(ctx?: Context<ListRequest>): Promise<ResponseDto> {
-        const requests: Request[] = ctx?.params.accountId
-            ? await this.requestMixin.find(
-                { accountId: ctx.params.accountId },
-                ctx.params.limit ? ctx.params.limit : 10,
-                ctx.params.offset ? ctx.params.offset : 0
-            )
-            : await this.requestMixin.find(
-                null,
-                ctx?.params.limit ? ctx.params.limit : 10,
-                ctx?.params.offset ? ctx.params.offset : 0
-            );
+        const requests: Request[] = await this.requestMixin.getListRequests(
+            ctx?.params.accountId, ctx?.params.limit, ctx?.params.offset
+        );
 
         return ResponseDto.response(ErrorMap.SUCCESSFUL, requests);
     }
@@ -286,12 +287,16 @@ export default class RequestService extends Service {
             return ResponseDto.response(ErrorMap.E018, { id: ctx.params.id });
         }
 
-        const [project, __]: [Project, any] = await Promise.all([
-            this.projectMixin.findOne({ id: request.projectId }),
+        const [account, __]: [Account, any] = await Promise.all([
+            this.accountMixin.findOne({ id: request.accountId }),
             this.requestMixin.update({ id: ctx.params.id }, { status: ProjectStatus.PROCESSING }),
         ]);
-        if (!project) {
-            return ResponseDto.response(ErrorMap.E014, { id: request.projectId });
+        let project = {} as Project;
+        if (request.type !== RequestType.STORE_CODE_ID) {
+            project = await this.projectMixin.findOne({ id: request.projectId });
+            if (!project) {
+                return ResponseDto.response(ErrorMap.E014, { id: request.projectId });
+            }
         }
 
         const listQueries: any[] = [];
@@ -310,6 +315,11 @@ export default class RequestService extends Service {
                 listQueries.push([
                     this.projectMixin.update({ id: project.id }, { status: ProjectStatus.APPROVED }),
                     this.requestMixin.update({ id: request.id }, { status: ProjectStatus.APPROVED }),
+                    this.commonService.sendEmail(
+                        account.email!,
+                        "Project listing request approved!",
+                        `<p>Your request ${ctx.params.id} has been approved!</p>`
+                    ),
                 ]);
                 break;
             case RequestType.UPDATE:
@@ -350,6 +360,11 @@ export default class RequestService extends Service {
                 listQueries.push([
                     this.projectMixin.update({ id: project.id }, project),
                     this.requestMixin.update({ id: request.id }, { status: ProjectStatus.APPROVED }),
+                    this.commonService.sendEmail(
+                        account.email!,
+                        "Project update request approved!",
+                        `<p>Your request ${ctx.params.id} has been approved!</p>`
+                    ),
                 ]);
                 break;
             case RequestType.DELETE:
@@ -357,6 +372,11 @@ export default class RequestService extends Service {
                     this.projectMixin.delete({ id: project.id }),
                     this.projectCodeIdMixin.delete({ projectId: project.id }),
                     this.requestMixin.update({ id: request.id }, { status: ProjectStatus.APPROVED }),
+                    this.commonService.sendEmail(
+                        account.email!,
+                        "Project delete request approved!",
+                        `<p>Your request ${ctx.params.id} has been approved!</p>`
+                    ),
                 ]);
                 break;
             case RequestType.STORE_CODE_ID:
@@ -388,21 +408,23 @@ export default class RequestService extends Service {
             return ResponseDto.response(ErrorMap.E018, { id: ctx.params.id });
         }
 
-        const [project, __]: [Project, any] = await Promise.all([
-            this.projectMixin.findOne({ id: request.projectId }),
+        const [account, __]: [Account, any] = await Promise.all([
+            this.accountMixin.findOne({ id: request.accountId }),
             this.requestMixin.update({ id: ctx.params.id }, { status: ProjectStatus.PROCESSING }),
         ]);
-        if (!project) {
-            return ResponseDto.response(ErrorMap.E014, { id: request.projectId });
+        if (request.type !== RequestType.STORE_CODE_ID) {
+            const project = await this.projectMixin.findOne({ id: request.projectId });
+            if (!project) {
+                return ResponseDto.response(ErrorMap.E014, { id: request.projectId });
+            }
         }
-
         await Promise.all([
             this.requestMixin.update({ id: ctx.params.id }, { status: ProjectStatus.REJECTED }),
             // TODO: Edit email content
             this.commonService.sendEmail(
-                project.email!,
+                account.email!,
                 "Request rejected!",
-                `<p>Your request to update project with id ${project.id} has been rejected!</p>
+                `<p>Your request ${ctx.params.id} has been rejected!</p>
                 <p>Reason: ${ctx.params.reason}</p>`
             ),
         ]);
@@ -453,7 +475,7 @@ export default class RequestService extends Service {
                     ),
                 ]);
             }
-        } catch (error: any) {
+        } catch (error) {
             this.logger.error(error);
             await this.requestMixin.update({ id: requestId }, { status: ProjectStatus.ERROR });
         }
@@ -469,7 +491,6 @@ export default class RequestService extends Service {
         this.getQueue("request.store-code-id").on("progress", (job: Job) => {
             this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
         });
-        // eslint-disable-next-line no-underscore-dangle
         return super._start();
     }
 }

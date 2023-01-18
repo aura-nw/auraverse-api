@@ -188,7 +188,7 @@ export default class AuthService extends Service {
 		if (!bcrypt.compareSync(ctx.params.password!, account.password!)) {
 			return ResponseDto.response(ErrorMap.E006, { request: ctx.params });
 		}
-		const token = jwt.sign({ id: account.id }, process.env.JWT_SECRET!, {
+		const token = jwt.sign({ id: account.id, accountType: account.accountType }, process.env.JWT_SECRET!, {
 			expiresIn: 86400, // Expires in 24 hours
 		});
 

@@ -97,11 +97,15 @@ export const ErrorMap = {
     },
     E017: {
         Code: "E017",
-        Message: "Project had just been submitted! Unable to update!",
+        Message: "Project is not Approved! Unable to update!",
     },
     E018: {
         Code: "E018",
         Message: "Request doesn\'t exist!",
+    },
+    E019: {
+        Code: "E019",
+        Message: "Code IDs are not owned by this account!",
     },
     E400: {
         Code: "E400",

@@ -93,6 +93,7 @@ export default class ApiService extends Service {
 							// Request
 							"GET /request/list/:accountId": "request.listYourRequests",
 							"GET /request/details/:id": "request.requestDetails",
+							"POST /request/store-code-id": "request.requestStoreCodeId",
 						},
 						/**
 						 * Before call hook. You can check the request.

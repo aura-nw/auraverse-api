@@ -9,7 +9,7 @@ dotenv.config();
 
 export class Common {
     private transporter: any;
-    private network: Network = {} as Network;
+    private network: Network | undefined;
 
     public async getTransport(transporter: any) {
         if (transporter === undefined) {
@@ -43,8 +43,9 @@ export class Common {
         }
     }
 
-    public async storeCode(senderAddress: string, wasmCode: Uint8Array, fee: StdFee | "auto" | number) {
-        const result = await this.network.upload(senderAddress, wasmCode, fee);
+    public async storeCode(senderAddress: string, wasmCode: Uint8Array, fee: StdFee | "auto" | number, network: Network) {
+        this.network = network;
+        const result = await this.network!.upload(senderAddress, wasmCode, fee);
         if (!result.codeId) {
             throw result;
         }

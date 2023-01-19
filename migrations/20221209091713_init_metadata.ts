@@ -80,7 +80,7 @@ export async function up(knex: Knex) {
         table.timestamp("updated_at")
             .defaultTo(knex.raw("current_timestamp on update current_timestamp")).notNullable();
         table.integer("account_id").notNullable();
-        table.integer("project_id").notNullable();
+        table.integer("project_id").nullable();
         table.json("codeIds").nullable();
         table.string("name").nullable();
         table.string("email").nullable();

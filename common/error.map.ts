@@ -107,6 +107,10 @@ export const ErrorMap = {
         Code: "E019",
         Message: "Code IDs are not owned by this account!",
     },
+    E020: {
+        Code: "E020",
+        Message: "No Code IDs to create request!",
+    },
     E400: {
         Code: "E400",
         Message: "Bad request",

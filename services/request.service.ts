@@ -7,6 +7,7 @@ import { Service, ServiceBroker, Context } from "moleculer";
 import _ from "lodash";
 import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 import { Job } from "bull";
+import { GasPrice } from "@cosmjs/stargate";
 import { ApiConstants, AppConstants, CallApiMethod, ErrorMap, ModulePath, ProjectStatus, RequestType } from "../common";
 import {
     ListRequest,
@@ -32,6 +33,7 @@ export default class RequestService extends Service {
     private codeIdMixin = new DatabaseCodeIdMixin();
     private projectCodeIdMixin = new DatabaseProjectCodeIdMixin();
     private commonService = new Common();
+    private defaultGasPrice = GasPrice.fromString(process.env.DEFAULT_GAS_PRICE!);
 
     public constructor(public broker: ServiceBroker) {
         super(broker);
@@ -264,7 +266,11 @@ export default class RequestService extends Service {
     }
 
     public async requestStoreCodeId(ctx: Context<StoreCodeIdRequest>): Promise<ResponseDto> {
-        const codeIds: CodeId[] = await this.codeIdMixin.find({ code_id: [...ctx.params.codeIds!] });
+        if (ctx.params.codeIds?.length === 0) {
+            return ResponseDto.response(ErrorMap.E020);
+        }
+
+        const codeIds: CodeId[] = await this.codeIdMixin.getCodeIdsByCodeId(ctx.params.codeIds!);
         const missingCodeIds = _.difference(ctx.params.codeIds!, codeIds.map((c: CodeId) => c.codeId));
         if (missingCodeIds.length > 0) {
             return ResponseDto.response(ErrorMap.E013, { codeIds: missingCodeIds });
@@ -455,14 +461,19 @@ export default class RequestService extends Service {
                 this.logger.info("System account:", account);
 
                 // Connect network
-                this.network = await Network.connectWithSigner(
+                const network = await Network.connectWithSigner(
                     process.env.TARGET_RPC!,
                     account,
                     signer,
                     { gasPrice: this.defaultGasPrice }
                 );
 
-                const targetCodeId = await this.commonService.storeCode(account.address, codeDetails.data, AppConstants.AUTO);
+                const targetCodeId = await this.commonService.storeCode(
+                    account.address,
+                    codeDetails.data,
+                    AppConstants.AUTO,
+                    network
+                );
                 this.logger.info("Target code id:", targetCodeId);
 
                 await Promise.all([

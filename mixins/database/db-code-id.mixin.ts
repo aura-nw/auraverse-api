@@ -14,4 +14,8 @@ export class DatabaseCodeIdMixin extends DatabaseMixin {
             .join(DbTable.PROJECT_CODE_ID, `${this.model}.id`, `${DbTable.PROJECT_CODE_ID}.internal_code_id`)
             .select("*").where({ projectId });
     }
+
+    public async getCodeIdsByCodeId(codeIds: number[]): Promise<any> {
+        return await knex(this.model).select("*").whereIn("code_id", codeIds);
+    }
 }

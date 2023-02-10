@@ -1,5 +1,5 @@
 /* eslint-disable id-blacklist */
-import { knex } from "../../config/database";
+import { knex } from '../../config/database';
 
 export class DatabaseMixin {
 	private tableName: string;
@@ -18,16 +18,21 @@ export class DatabaseMixin {
 
 	public async findOne(where?: any): Promise<any> {
 		return where
-			? await knex(this.tableName).select("*").where(where).first()
-			: await knex(this.tableName).select("*").first();
+			? await knex(this.tableName).select('*').where(where).first()
+			: await knex(this.tableName).select('*').first();
 	}
 
 	public async find(where?: any, limit?: number, offset?: number): Promise<any> {
 		return where
-			? await knex(this.tableName).select("*").where(where)
-				.limit(limit ? limit : 10).offset(offset ? offset : 0)
-			: await knex(this.tableName).select("*")
-				.limit(limit ? limit : 10).offset(offset ? offset : 0);
+			? await knex(this.tableName)
+					.select('*')
+					.where(where)
+					.limit(limit ? limit : 10)
+					.offset(offset ? offset : 0)
+			: await knex(this.tableName)
+					.select('*')
+					.limit(limit ? limit : 10)
+					.offset(offset ? offset : 0);
 	}
 
 	public async delete(where: any): Promise<any> {

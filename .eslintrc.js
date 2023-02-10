@@ -64,7 +64,7 @@ module.exports = {
 		"@typescript-eslint/prefer-namespace-keyword": "error",
 		"@typescript-eslint/quotes": [
 			"error",
-			"double",
+			"single",
 			{
 				avoidEscape: true
 			}
@@ -74,7 +74,6 @@ module.exports = {
 		"@typescript-eslint/type-annotation-spacing": "error",
 		"@typescript-eslint/unified-signatures": "error",
 		"arrow-body-style": "error",
-		"arrow-parens": ["error", "as-needed"],
 		camelcase: "error",
 		"capitalized-comments": "error",
 		"comma-dangle": ["error", "always-multiline"],

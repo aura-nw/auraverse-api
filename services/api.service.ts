@@ -1,16 +1,16 @@
 /* eslint-disable capitalized-comments */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
-import { ServerResponse } from "http";
-import * as jwt from "jsonwebtoken";
-import { Service, ServiceBroker, Context } from "moleculer";
-import ApiGateway from "moleculer-web";
-import cookieParser from "cookie-parser";
-import helmet from "helmet";
-import * as dotenv from "dotenv";
-import { AccountType, Config } from "../common";
-import { RequestMessage } from "../types";
-import { DatabaseAccountMixin } from "../mixins/database";
+import { ServerResponse } from 'http';
+import * as jwt from 'jsonwebtoken';
+import { Service, ServiceBroker, Context } from 'moleculer';
+import ApiGateway from 'moleculer-web';
+import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
+import * as dotenv from 'dotenv';
+import { AccountType, Config } from '../common';
+import { RequestMessage } from '../types';
+import { DatabaseAccountMixin } from '../mixins/database';
 
 dotenv.config();
 
@@ -20,7 +20,7 @@ export default class ApiService extends Service {
 	public constructor(broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
-			name: "api",
+			name: 'api',
 			mixins: [ApiGateway],
 			// More info about settings: https://moleculer.services/docs/0.14/moleculer-web.html
 			settings: {
@@ -31,38 +31,38 @@ export default class ApiService extends Service {
 					helmet({
 						contentSecurityPolicy: {
 							directives: {
-								"default-src": ["'self'"],
-								"base-uri": ["'self'"],
+								'default-src': ["'self'"],
+								'base-uri': ["'self'"],
 								// "block-all-mixed-content",
-								"font-src": ["'self'"],
-								"frame-ancestors": ["'self'"],
-								"img-src": ["'self'"],
-								"object-src": ["'none'"],
-								"script-src": ["'self'", "'unsafe-inline'"],
-								"script-src-attr": ["'none'"],
-								"style-src": ["'self'", "'unsafe-inline'"],
-								"upgrade-insecure-requests": [],
+								'font-src': ["'self'"],
+								'frame-ancestors': ["'self'"],
+								'img-src': ["'self'"],
+								'object-src': ["'none'"],
+								'script-src': ["'self'", "'unsafe-inline'"],
+								'script-src-attr': ["'none'"],
+								'style-src': ["'self'", "'unsafe-inline'"],
+								'upgrade-insecure-requests': [],
 							},
 						},
 					}),
 				],
 				cors: {
-					origin: ["*"],
-					methods: ["GET", "OPTIONS", "POST", "PUT", "DELETE"],
+					origin: ['*'],
+					methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'DELETE'],
 					credentials: false,
 					maxAge: 3600,
 				},
 				routes: [
 					// Moleculer-auto-openapi routes
 					{
-						path: "/openapi",
+						path: '/openapi',
 						aliases: {
-							"GET /openapi.json": "openapi.generateDocs", // Swagger scheme
-							"GET /ui": "openapi.ui", // Ui
+							'GET /openapi.json': 'openapi.generateDocs', // Swagger scheme
+							'GET /ui': 'openapi.ui', // Ui
 						},
 					},
 					{
-						path: "/api",
+						path: '/api',
 						// Route-level Express middlewares. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Middlewares
 						use: [],
 						// Enable/disable parameter merging method. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Disable-merging
@@ -74,26 +74,27 @@ export default class ApiService extends Service {
 						// Enable authorization. Implement the logic into `authorize` method. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Authorization
 						authorization: true,
 						cors: {
-							origin: ["*"],
-							methods: ["GET", "OPTIONS", "POST", "PUT", "DELETE"],
+							origin: ['*'],
+							methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'DELETE'],
 							credentials: true,
 							maxAge: 3600,
 						},
 						aliases: {
 							// Account
-							"POST /account/change-password": "account.changePassword",
-							"POST /account/change-email": "account.changeEmail",
-							"POST /account/verify-code-id-ownership": "account.verifyCodeIdOwnership",
+							'POST /account/change-password': 'account.changePassword',
+							'POST /account/change-email': 'account.changeEmail',
+							'POST /account/verify-code-id-ownership':
+								'account.verifyCodeIdOwnership',
 
 							// Project
-							"POST /project/create": "project.createProject",
-							"POST /project/update": "project.updateProject",
-							"GET /project/list/:accountId": "project.listYourProjects",
+							'POST /project/create': 'project.createProject',
+							'POST /project/update': 'project.updateProject',
+							'GET /project/list/:accountId': 'project.listYourProjects',
 
 							// Request
-							"GET /request/list/:accountId": "request.listYourRequests",
-							"GET /request/details/:id": "request.requestDetails",
-							"POST /request/store-code-id": "request.requestStoreCodeId",
+							'GET /request/list/:accountId': 'request.listYourRequests',
+							'GET /request/details/:id': 'request.requestDetails',
+							'POST /request/store-code-id': 'request.requestStoreCodeId',
 						},
 						/**
 						 * Before call hook. You can check the request.
@@ -129,11 +130,11 @@ export default class ApiService extends Service {
 						bodyParsers: {
 							json: {
 								strict: false,
-								limit: "1MB",
+								limit: '1MB',
 							},
 							urlencoded: {
 								extended: true,
-								limit: "1MB",
+								limit: '1MB',
 							},
 						},
 
@@ -144,7 +145,7 @@ export default class ApiService extends Service {
 						logging: true,
 					},
 					{
-						path: "/admin",
+						path: '/admin',
 						// Route-level Express middlewares. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Middlewares
 						use: [],
 						// Enable/disable parameter merging method. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Disable-merging
@@ -156,17 +157,17 @@ export default class ApiService extends Service {
 						// Enable authorization. Implement the logic into `authorize` method. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Authorization
 						authorization: true,
 						cors: {
-							origin: ["*"],
-							methods: ["GET", "OPTIONS", "POST", "PUT", "DELETE"],
+							origin: ['*'],
+							methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'DELETE'],
 							credentials: true,
 							maxAge: 3600,
 						},
 						roles: [AccountType.ADMIN],
 						aliases: {
 							// Request
-							"GET /request/list": "request.listRequests",
-							"POST /request/confirm": "request.confirmRequest",
-							"POST /request/reject": "request.rejectRequest",
+							'GET /request/list': 'request.listRequests',
+							'POST /request/confirm': 'request.confirmRequest',
+							'POST /request/reject': 'request.rejectRequest',
 						},
 						/**
 						 * Before call hook. You can check the request.
@@ -179,9 +180,9 @@ export default class ApiService extends Service {
 						onBeforeCall(
 							ctx: Context<Record<string, unknown>, any>,
 							route: any,
-							req: RequestMessage
+							req: RequestMessage,
 						) {
-							this.logger.info("onBeforeCall in protected route");
+							this.logger.info('onBeforeCall in protected route');
 							ctx.meta.authToken = req.headers.authorization;
 						},
 
@@ -198,10 +199,10 @@ export default class ApiService extends Service {
 							route: any,
 							req: RequestMessage,
 							res: ServerResponse,
-							data: Record<string, any>
+							data: Record<string, any>,
 						) {
-							this.logger.info("onAfterCall in protected route");
-							res.setHeader("X-Custom-Header", "Authorized path");
+							this.logger.info('onAfterCall in protected route');
+							res.setHeader('X-Custom-Header', 'Authorized path');
 							return data;
 						},
 
@@ -211,11 +212,11 @@ export default class ApiService extends Service {
 						bodyParsers: {
 							json: {
 								strict: false,
-								limit: "1MB",
+								limit: '1MB',
 							},
 							urlencoded: {
 								extended: true,
-								limit: "1MB",
+								limit: '1MB',
 							},
 						},
 
@@ -226,7 +227,7 @@ export default class ApiService extends Service {
 						logging: true,
 					},
 					{
-						path: "/public",
+						path: '/public',
 						// Route-level Express middlewares. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Middlewares
 						use: [],
 						// Enable/disable parameter merging method. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Disable-merging
@@ -240,14 +241,14 @@ export default class ApiService extends Service {
 
 						aliases: {
 							// Auth
-							"POST /auth/sign-up": "auth.signUp",
-							"GET /auth/confirm/:confirmationToken": "auth.confirmSignUp",
-							"POST /auth/login": "auth.login",
-							"POST /auth/forgot-password": "auth.forgotPassword",
+							'POST /auth/sign-up': 'auth.signUp',
+							'GET /auth/confirm/:confirmationToken': 'auth.confirmSignUp',
+							'POST /auth/login': 'auth.login',
+							'POST /auth/forgot-password': 'auth.forgotPassword',
 
 							// Project
-							"GET /project/list": "project.listProjects",
-							"GET /project/details/:id": "project.projectDetails",
+							'GET /project/list': 'project.listProjects',
+							'GET /project/details/:id': 'project.projectDetails',
 						},
 
 						// Calling options. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Calling-options
@@ -256,11 +257,11 @@ export default class ApiService extends Service {
 						bodyParsers: {
 							json: {
 								strict: false,
-								limit: "1MB",
+								limit: '1MB',
 							},
 							urlencoded: {
 								extended: true,
-								limit: "1MB",
+								limit: '1MB',
 							},
 						},
 
@@ -279,14 +280,13 @@ export default class ApiService extends Service {
 				logResponseData: null,
 				// Serve assets from "public" folder
 				assets: {
-					folder: "public",
+					folder: 'public',
 					// Options to `server-static` module
 					options: {},
 				},
 			},
 
 			methods: {
-
 				/**
 				 * Authenticate the request. It checks the `Authorization` token value in the request header.
 				 * Check the token value & resolve the user by the token.
@@ -321,45 +321,64 @@ export default class ApiService extends Service {
 				authorize: async (
 					ctx: Context<Record<string, unknown>, any>,
 					route: any,
-					req: RequestMessage
+					req: RequestMessage,
 				): Promise<any> => {
 					const auth = req.headers.authorization;
 
 					if (auth) {
-						const type = auth.split(" ")[0];
+						const type = auth.split(' ')[0];
 						let token: string | undefined;
-						if (type === "Token" || type === "Bearer") {
-							token = auth.split(" ")[1];
+						if (type === 'Token' || type === 'Bearer') {
+							token = auth.split(' ')[1];
 						}
 
 						if (token) {
 							try {
-								const decoded: jwt.JwtPayload = jwt.verify(token, Config.JWT_SECRET!) as jwt.JwtPayload;
+								const decoded: jwt.JwtPayload = jwt.verify(
+									token,
+									Config.JWT_SECRET!,
+								) as jwt.JwtPayload;
 								if (decoded) {
 									if (route.opts.roles) {
 										if (route.opts.roles.indexOf(decoded.accountType) === -1) {
-											return Promise.reject(new ApiGateway.Errors.UnAuthorizedError("Permission denied!", null));
+											return Promise.reject(
+												new ApiGateway.Errors.UnAuthorizedError(
+													'Permission denied!',
+													null,
+												),
+											);
 										}
 									}
 
-									const user = await this.accountMixin.findOne({ id: decoded.id });
+									const user = await this.accountMixin.findOne({
+										id: decoded.id,
+									});
 									if (user && Date.now() < decoded.exp! * 1000) {
 										ctx.meta.user = user;
 										return Promise.resolve(user);
 									}
 								}
 							} catch (error) {
-								this.logger.error("Authentication error", error);
+								this.logger.error('Authentication error', error);
 							}
 						}
-						console.log("Authentication token failed");
-						return Promise.reject(new ApiGateway.Errors.UnAuthorizedError(ApiGateway.Errors.ERR_INVALID_TOKEN, null));
+						console.log('Authentication token failed');
+						return Promise.reject(
+							new ApiGateway.Errors.UnAuthorizedError(
+								ApiGateway.Errors.ERR_INVALID_TOKEN,
+								null,
+							),
+						);
 					}
-					console.log("Authentication auth failed");
-					return Promise.reject(new ApiGateway.Errors.UnAuthorizedError(ApiGateway.Errors.ERR_NO_TOKEN, null));
+					console.log('Authentication auth failed');
+					return Promise.reject(
+						new ApiGateway.Errors.UnAuthorizedError(
+							ApiGateway.Errors.ERR_NO_TOKEN,
+							null,
+						),
+					);
 				},
 			},
-
 		});
 	}
 }

@@ -1,21 +1,28 @@
 /* eslint-disable camelcase */
-"use strict";
+'use strict';
 
-import { Service, ServiceBroker, Context } from "moleculer";
-import * as jwt from "jsonwebtoken";
-import * as bcrypt from "bcryptjs";
-import * as generator from "generate-password";
-import { Common } from "../utils";
-import { DatabaseAccountMixin } from "../mixins/database";
-import { AccountStatus, AccountType, ApiConstants, CallApiMethod, ErrorMap, ModulePath } from "../common";
+import { Service, ServiceBroker, Context } from 'moleculer';
+import * as jwt from 'jsonwebtoken';
+import * as bcrypt from 'bcryptjs';
+import * as generator from 'generate-password';
+import { Common } from '../utils';
+import { DatabaseAccountMixin } from '../mixins/database';
+import {
+	AccountStatus,
+	AccountType,
+	ApiConstants,
+	CallApiMethod,
+	ErrorMap,
+	ModulePath,
+} from '../common';
 import {
 	ConfirmSignUpRequest,
 	ForgotPasswordRequest,
 	LoginRequest,
 	ResponseDto,
 	SignUpPersonalAccountRequest,
-} from "../types";
-import { Account } from "../models";
+} from '../types';
+import { Account } from '../models';
 
 export default class AuthService extends Service {
 	private accountMixin = new DatabaseAccountMixin();
@@ -25,7 +32,7 @@ export default class AuthService extends Service {
 		super(broker);
 		this.parseServiceSchema({
 			name: ModulePath.AUTH,
-			mixins: [this.accountMixin],
+			mixins: [],
 			actions: {
 				/**
 				 * Sign up a personal account
@@ -37,15 +44,17 @@ export default class AuthService extends Service {
 						path: ApiConstants.SIGN_UP_PERSONAL_ACCOUNT,
 					},
 					openapi: {
-						summary: "Sign up a personal account",
-						description: "Sign up a personal account",
+						summary: 'Sign up a personal account',
+						description: 'Sign up a personal account',
 					},
 					params: {
-						username: "string",
-						email: "string",
-						password: "string",
+						username: 'string',
+						email: 'string',
+						password: 'string',
 					},
-					async handler(ctx: Context<SignUpPersonalAccountRequest>): Promise<ResponseDto> {
+					async handler(
+						ctx: Context<SignUpPersonalAccountRequest>,
+					): Promise<ResponseDto> {
 						return await this.signUpPersonalAccount(ctx);
 					},
 				},
@@ -59,11 +68,11 @@ export default class AuthService extends Service {
 						path: ApiConstants.CONFIRM_SIGN_UP,
 					},
 					openapi: {
-						summary: "Confirm account sign up via email",
-						description: "Confirm account sign up via email",
+						summary: 'Confirm account sign up via email',
+						description: 'Confirm account sign up via email',
 					},
 					params: {
-						confirmationToken: "string",
+						confirmationToken: 'string',
 					},
 					async handler(ctx: Context<ConfirmSignUpRequest>): Promise<ResponseDto> {
 						return await this.confirmSignUp(ctx);
@@ -79,12 +88,12 @@ export default class AuthService extends Service {
 						path: ApiConstants.LOGIN,
 					},
 					openapi: {
-						summary: "Login to Auraverse",
-						description: "Login to Auraverse",
+						summary: 'Login to Auraverse',
+						description: 'Login to Auraverse',
 					},
 					params: {
-						username: "string",
-						password: "string",
+						username: 'string',
+						password: 'string',
 					},
 					async handler(ctx: Context<LoginRequest>): Promise<ResponseDto> {
 						return await this.login(ctx);
@@ -100,11 +109,11 @@ export default class AuthService extends Service {
 						path: ApiConstants.FORGOT_PASSWORD,
 					},
 					openapi: {
-						summary: "Forgot password",
-						description: "Forgot password",
+						summary: 'Forgot password',
+						description: 'Forgot password',
 					},
 					params: {
-						email: "string",
+						email: 'string',
 					},
 					async handler(ctx: Context<ForgotPasswordRequest>): Promise<ResponseDto> {
 						return await this.forgotPassword(ctx);
@@ -115,10 +124,12 @@ export default class AuthService extends Service {
 	}
 
 	// Action
-	public async signUpPersonalAccount(ctx: Context<SignUpPersonalAccountRequest>): Promise<ResponseDto> {
+	public async signUpPersonalAccount(
+		ctx: Context<SignUpPersonalAccountRequest>,
+	): Promise<ResponseDto> {
 		const existAccount: Account = await this.accountMixin.checkExistAccount(
 			ctx.params.username!,
-			ctx.params.email!
+			ctx.params.email!,
 		);
 		const token = jwt.sign({ request: ctx.params }, process.env.JWT_SECRET!);
 		const account = {
@@ -141,16 +152,18 @@ export default class AuthService extends Service {
 			} else {
 				await this.accountMixin.update({ id: existAccount.id }, account);
 			}
-		} else { await this.accountMixin.insert(account); }
+		} else {
+			await this.accountMixin.insert(account);
+		}
 
 		// TODO: Edit email content
 		await this.commonService.sendEmail(
 			ctx.params.email!,
-			"Confirm Auraverse account sign-up",
+			'Confirm Auraverse account sign-up',
 			`<h1>Email Confirmation</h1>
         <p>Thank you for subscribing. Please confirm your email by clicking on the following link</p>
         <a href=${process.env.APP_DOMAIN}/public/${ModulePath.AUTH}/confirm/${token}> Click here</a>
-        </div>`
+        </div>`,
 		);
 
 		return ResponseDto.response(ErrorMap.SENT_VERIFICATION, { account });
@@ -161,43 +174,59 @@ export default class AuthService extends Service {
 			confirmation_token: ctx.params.confirmationToken,
 		});
 
-		if (!account) { return ResponseDto.response(ErrorMap.E015, { request: ctx.params.confirmationToken }); }
-		else if (account.accountStatus !== AccountStatus.WAITING) {
+		if (!account) {
+			return ResponseDto.response(ErrorMap.E015, { request: ctx.params.confirmationToken });
+		} else if (account.accountStatus !== AccountStatus.WAITING) {
 			return ResponseDto.response(ErrorMap.E003, { request: ctx.params.confirmationToken });
 		}
-		const decoded: jwt.JwtPayload = jwt.verify(
-			ctx.params.confirmationToken!,
-			process.env.JWT_SECRET!
-		) as jwt.JwtPayload;
-		if (decoded) {
-			if (Date.now() > decoded.exp! * 1000) {
-				return ResponseDto.response(ErrorMap.E003, { request: ctx.params.confirmationToken });
+		try {
+			const decoded: jwt.JwtPayload = jwt.verify(
+				ctx.params.confirmationToken!,
+				process.env.JWT_SECRET!,
+			) as jwt.JwtPayload;
+		} catch (error) {
+			if (error instanceof jwt.TokenExpiredError) {
+				return ResponseDto.response(ErrorMap.E016, {
+					request: ctx.params.confirmationToken,
+				});
 			}
+			this.logger.error(error);
 		}
-		await this.accountMixin.update({ id: account.id }, { account_status: AccountStatus.ACTIVATED });
+		await this.accountMixin.update(
+			{ id: account.id },
+			{ account_status: AccountStatus.ACTIVATED },
+		);
 
 		return ResponseDto.response(ErrorMap.SUCCESSFUL);
 	}
 
 	public async login(ctx: Context<LoginRequest>): Promise<ResponseDto> {
 		const account: Account = await this.accountMixin.findOne({ username: ctx.params.username });
-		if (!account) { return ResponseDto.response(ErrorMap.E004, { request: ctx.params }); }
+		if (!account) {
+			return ResponseDto.response(ErrorMap.E004, { request: ctx.params });
+		}
 		if (account.accountStatus === AccountStatus.WAITING) {
 			return ResponseDto.response(ErrorMap.E005, { request: ctx.params });
 		}
 		if (!bcrypt.compareSync(ctx.params.password!, account.password!)) {
 			return ResponseDto.response(ErrorMap.E006, { request: ctx.params });
 		}
-		const token = jwt.sign({ id: account.id, accountType: account.accountType }, process.env.JWT_SECRET!, {
-			expiresIn: 86400, // Expires in 24 hours
-		});
+		const token = jwt.sign(
+			{ id: account.id, accountType: account.accountType },
+			process.env.JWT_SECRET!,
+			{
+				expiresIn: 86400, // Expires in 24 hours
+			},
+		);
 
 		return ResponseDto.response(ErrorMap.SUCCESSFUL, { token });
 	}
 
 	public async forgotPassword(ctx: Context<ForgotPasswordRequest>): Promise<ResponseDto> {
 		const account: Account = await this.accountMixin.findOne({ email: ctx.params.email });
-		if (!account) { return ResponseDto.response(ErrorMap.E004, { request: ctx.params }); }
+		if (!account) {
+			return ResponseDto.response(ErrorMap.E004, { request: ctx.params });
+		}
 		if (account.accountStatus === AccountStatus.WAITING) {
 			return ResponseDto.response(ErrorMap.E005, { request: ctx.params });
 		}
@@ -210,12 +239,15 @@ export default class AuthService extends Service {
 		await Promise.all([
 			this.commonService.sendEmail(
 				ctx.params.email!,
-				"Reset Auraverse password",
+				'Reset Auraverse password',
 				`<h1>New Password</h1>
         <p>Your new password is: ${newPassword}</p>
-        </div>`
+        </div>`,
 			),
-			this.accountMixin.update({ id: account.id }, { password: bcrypt.hashSync(newPassword, 8) }),
+			this.accountMixin.update(
+				{ id: account.id },
+				{ password: bcrypt.hashSync(newPassword, 8) },
+			),
 		]);
 
 		return ResponseDto.response(ErrorMap.SENT_NEW_PASSWORD);

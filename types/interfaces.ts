@@ -1,7 +1,7 @@
-import { IncomingMessage } from "http";
-import { ActionSchema, ActionParamSchema } from "moleculer";
+import { IncomingMessage } from 'http';
+import { ActionSchema, ActionParamSchema } from 'moleculer';
 
-export type DBDialog = "local" | "file" | "mongodb" | "mysql";
+export type DBDialog = 'local' | 'file' | 'mongodb' | 'mysql';
 
 export interface DBInfo {
 	dialect: DBDialog;
@@ -23,7 +23,7 @@ export interface RouteSchemaOpts {
 
 export interface RouteSchema {
 	path: string;
-	mappingPolicy?: "restricted" | "all";
+	mappingPolicy?: 'restricted' | 'all';
 	opts: RouteSchemaOpts;
 	middlewares: ((req: any, res: any, next: any) => void)[];
 	authorization?: boolean;

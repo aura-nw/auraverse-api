@@ -7,7 +7,7 @@
 		"preserveConstEnums": true,
 		"sourceMap": true,
 		"pretty": true,
-		"target": "es6",
+		"target": "es2018",
 		"outDir": "dist",
 		"experimentalDecorators": true,
 		"emitDecoratorMetadata": true,

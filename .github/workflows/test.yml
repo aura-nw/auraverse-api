@@ -46,7 +46,8 @@ jobs:
       - name: Run build
         run: npm run build --if-present
       - name: Run test
-        env: NODE_ENV: test
+        env: 
+          NODE_ENV: test
         run: |
           npm run migrate:run --env test
           npm run test

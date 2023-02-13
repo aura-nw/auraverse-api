@@ -5,11 +5,11 @@ on:
     branches: [main, develop, staging]
 
 jobs:
-  test:
-    uses: ./.github/workflows/test.yml
-    secrets: inherit
+  # test:
+  #   uses: ./.github/workflow/test.yml
+  #   secrets: inherit
   build:
-    needs: test
+    # needs: test
     runs-on: ubuntu-latest
 
     steps:

@@ -1,0 +1,52 @@
+name: Test
+
+on:
+  workflow_call:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: [self-hosted, test]
+
+    services:
+      mysql:
+        image: postgres:8.0.32
+        env:
+          MYSQL_ROOT_PASSWORD: Newyork2024
+          MYSQL_DATABASE: auraverse_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 3306:3306
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          with:
+          node-version: 16
+      - name: Get npm cache directory
+        id: npm-cache-dir
+        run: |
+          echo "dir=$(npm config get cache)"  >> $GITHUB_OUTPUT
+      - uses: actions/cache@v3
+        id: npm-cache # use this to check for `cache-hit` ==> if: steps.npm-cache.outputs.cache-hit != 'true'
+        with:
+          path: ${{ steps.npm-cache-dir.outputs.dir }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Install dependencies
+        run: npm install
+      - name: Setup env
+        run: cp ci/.env.ci .env
+      - name: Run build
+        run: npm run build --if-present
+      - name: Run test
+        env: NODE_ENV: test
+        run: |
+          npm run migrate:run --env test
+          npm run test

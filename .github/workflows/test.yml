@@ -10,7 +10,7 @@ jobs:
 
     services:
       mysql:
-        image: postgres:8.0.32
+        image: mysql:8.0.32
         env:
           MYSQL_ROOT_PASSWORD: Newyork2024
           MYSQL_DATABASE: auraverse_test

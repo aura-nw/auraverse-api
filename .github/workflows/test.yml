@@ -14,11 +14,6 @@ jobs:
         env:
           MYSQL_ROOT_PASSWORD: Newyork2024
           MYSQL_DATABASE: auraverse_test
-        # options: >-
-        #   --health-cmd pg_isready
-        #   --health-interval 10s
-        #   --health-timeout 5s
-        #   --health-retries 5
         ports:
           - 3306:3306
 
@@ -40,7 +35,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
       - name: Install dependencies
-        run: npm install
+        run: npm install --force
       - name: Setup env
         run: cp ci/.env.ci .env
       - name: Run build

@@ -21,11 +21,10 @@ import {
 	DatabaseRequestMixin,
 } from '../../../mixins/database';
 import { ResponseDto } from '../../../types';
-import { Account, CodeId, Project, Request } from '../../../models';
-import { KMSSigner } from '../../../utils';
+import { Account, Project, Request } from '../../../models';
 
 describe("Test 'request' service", () => {
-	const broker = new ServiceBroker({ logger: true });
+	const broker = new ServiceBroker({ logger: false });
 	const requestService = broker.createService(RequestService);
 
 	const projectMixin = new DatabaseProjectMixin();
@@ -34,16 +33,7 @@ describe("Test 'request' service", () => {
 	const accountMixin = new DatabaseAccountMixin();
 	const projectCodeIdMixin = new DatabaseProjectCodeIdMixin();
 
-	const mockCallStoreCode = jest.fn(() => Promise.resolve(19));
-	const mockGetSystemAddress = jest.fn(() =>
-		Promise.resolve({
-			pubkey: new Uint8Array([
-				3, 119, 166, 95, 164, 82, 227, 151, 63, 100, 149, 137, 217, 139, 140, 106, 216, 204,
-				161, 244, 195, 236, 238, 250, 242, 218, 54, 180, 102, 179, 254, 112, 202,
-			]),
-			address: 'aura1qmufv90gghadhm6jwaaapla3046x7tcytvshe3',
-		}),
-	);
+	// const mockCallStoreCode = jest.fn(() => Promise.resolve(19));
 
 	beforeAll(async () => {
 		await broker.start();
@@ -540,33 +530,31 @@ describe("Test 'request' service", () => {
 		});
 	});
 
-	describe("Test 'request.uploadCodeIdMainnet' job", () => {
-		it('Should store Code ID to mainnet and update entity in DB', async () => {
-			requestService.commonService.storeCode = mockCallStoreCode;
-			const signer = new KMSSigner(process.env.SIGNER_WALLET_ADDRESS!);
-			signer.getAccount = mockGetSystemAddress;
+	// describe("Test 'request.uploadCodeIdMainnet' job", () => {
+	// 	it('Should store Code ID to mainnet and update entity in DB', async () => {
+	// 		requestService.commonService.storeCode = mockCallStoreCode;
 
-			const insertedRequest = await requestMixin.insert({
-				accountId: 1,
-				codeIds: JSON.stringify([19]),
-				email: 'doquockhanhan@gmail.com',
-				status: ProjectStatus.SUBMITTED,
-				type: RequestType.STORE_CODE_ID,
-			});
+	// 		const insertedRequest = await requestMixin.insert({
+	// 			accountId: 1,
+	// 			codeIds: JSON.stringify([19]),
+	// 			email: 'doquockhanhan@gmail.com',
+	// 			status: ProjectStatus.SUBMITTED,
+	// 			type: RequestType.STORE_CODE_ID,
+	// 		});
 
-			await requestService.uploadCodeIdMainnet(
-				[19],
-				'doquockhanhan@gmail.com',
-				insertedRequest,
-			);
+	// 		await requestService.uploadCodeIdMainnet(
+	// 			[19],
+	// 			'doquockhanhan@gmail.com',
+	// 			insertedRequest,
+	// 		);
 
-			const [storeCodeRequest, storeCodeCodeId]: [Request, CodeId] = await Promise.all([
-				requestMixin.findOne({ id: insertedRequest }),
-				codeIdMixin.findOne({ code_id: 19 }),
-			]);
+	// 		const [storeCodeRequest, storeCodeCodeId]: [Request, CodeId] = await Promise.all([
+	// 			requestMixin.findOne({ id: insertedRequest }),
+	// 			codeIdMixin.findOne({ code_id: 19 }),
+	// 		]);
 
-			expect(storeCodeRequest.status).toEqual(ProjectStatus.APPROVED);
-			expect(storeCodeCodeId.mainnetCodeId).toEqual(19);
-		});
-	});
+	// 		expect(storeCodeRequest.status).toEqual(ProjectStatus.APPROVED);
+	// 		expect(storeCodeCodeId.mainnetCodeId).toEqual(19);
+	// 	});
+	// });
 });

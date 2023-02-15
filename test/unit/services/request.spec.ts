@@ -25,7 +25,7 @@ import { Account, CodeId, Project, Request } from '../../../models';
 import { KMSSigner } from '../../../utils';
 
 describe("Test 'request' service", () => {
-	const broker = new ServiceBroker({ logger: false });
+	const broker = new ServiceBroker({ logger: true });
 	const requestService = broker.createService(RequestService);
 
 	const projectMixin = new DatabaseProjectMixin();

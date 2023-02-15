@@ -24,7 +24,7 @@ import { Account, CodeId, Project, Request } from '../../../models';
 
 describe("Test 'project' service", () => {
 	const broker = new ServiceBroker({ logger: false });
-	broker.createService(ProjectService);
+	const projectService = broker.createService(ProjectService);
 
 	const projectMixin = new DatabaseProjectMixin();
 	const requestMixin = new DatabaseRequestMixin();
@@ -51,18 +51,34 @@ describe("Test 'project' service", () => {
 				data: 'AGFzbQEAAAABjAEVYAJ/fwF/YAJ/fwBgA39/fwF/YAN/f38AYAF/AX9gAX8AYAR/f39/AGAFf39/',
 				mainnetCodeId: null,
 			}),
-			projectMixin.insert({
-				accountId: insertedAccount[0],
-				name: 'Khanh An',
-				email: 'doquockhanhan@gmail.com',
-				description: 'Anything',
-				otherDocumentation: 'Something else',
-				activeStatus: ProjectActiveStatus.RELEASED,
-				status: ProjectStatus.APPROVED,
-				website: 'github.com',
-				imageLink: 'facebook.com/doquockhanhan',
-				categories: JSON.stringify([ProjectCategories.DAO]),
-			}),
+			projectMixin.insert([
+				{
+					accountId: insertedAccount[0],
+					name: 'Khanh An',
+					email: 'doquockhanhan@gmail.com',
+					description: 'Anything',
+					otherDocumentation: 'Something else',
+					activeStatus: ProjectActiveStatus.RELEASED,
+					status: ProjectStatus.APPROVED,
+					website: 'github.com',
+					imageLink: 'facebook.com/doquockhanhan',
+					categories: JSON.stringify([ProjectCategories.DAO]),
+				},
+				{
+					createdAt: new Date('2000-06-19'),
+					updatedAt: new Date('2000-08-28'),
+					accountId: insertedAccount[0],
+					name: 'AnDQK',
+					email: 'doquockhanhan@gmail.com',
+					description: 'Anything',
+					otherDocumentation: 'Something else',
+					activeStatus: ProjectActiveStatus.RELEASED,
+					status: ProjectStatus.APPROVED,
+					website: 'github.com',
+					imageLink: 'facebook.com/doquockhanhan',
+					categories: JSON.stringify([ProjectCategories.FASHION]),
+				},
+			]),
 		]);
 	});
 	afterAll(async () => {
@@ -367,7 +383,7 @@ describe("Test 'project' service", () => {
 
 			expect(res.Code).toEqual(ErrorMap.SUCCESSFUL.Code);
 			expect(res.Message).toEqual(ErrorMap.SUCCESSFUL.Message);
-			expect(res.Data.projects.length).toEqual(3);
+			expect(res.Data.projects.length).toEqual(4);
 		});
 	});
 
@@ -383,7 +399,7 @@ describe("Test 'project' service", () => {
 
 			expect(res.Code).toEqual(ErrorMap.SUCCESSFUL.Code);
 			expect(res.Message).toEqual(ErrorMap.SUCCESSFUL.Message);
-			expect(res.Data.projects.length).toEqual(3);
+			expect(res.Data.projects.length).toEqual(4);
 		});
 	});
 
@@ -446,6 +462,16 @@ describe("Test 'project' service", () => {
 
 			expect(res.Code).toEqual(ErrorMap.E014.Code);
 			expect(res.Message).toEqual(ErrorMap.E014.Message);
+		});
+	});
+
+	describe("Test 'project.checkProjectIsNew' job", () => {
+		it('Should update project isNew attribute to false for projects that had been created for 30 days', async () => {
+			await projectService.checkProjectIsNew(0);
+
+			const oldProject: Project = await projectMixin.findOne({ name: 'AnDQK' });
+
+			expect(oldProject.isNew).toBeFalsy();
 		});
 	});
 });

@@ -1,7 +1,6 @@
 import { makeSignBytes } from '@cosmjs/proto-signing';
-import { toBase64 } from '@cosmjs/encoding';
+import { toBase64, fromBase64 } from '@cosmjs/encoding';
 import { SignDoc } from 'cosmjs-types/cosmos/tx/v1beta1/tx';
-import { fromBase64 } from '@cosmjs/encoding';
 import { sha256 } from '@cosmjs/crypto';
 import * as axios from 'axios';
 import { Secp256k1Signature } from '@cosmjs/crypto';

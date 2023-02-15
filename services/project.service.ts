@@ -554,6 +554,7 @@ export default class ProjectService extends Service {
 		return ResponseDto.response(ErrorMap.SUCCESSFUL, { project: resultProject });
 	}
 
+	// Queues
 	public async checkProjectIsNew(offset: number) {
 		const projects = await this.projectMixin.find(undefined, 100, offset);
 

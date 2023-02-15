@@ -605,6 +605,8 @@ export default class RequestService extends Service {
 					),
 				]);
 			}
+
+			await this.requestMixin.update({ id: requestId }, { status: ProjectStatus.APPROVED });
 		} catch (error) {
 			this.logger.error(error);
 			await this.requestMixin.update({ id: requestId }, { status: ProjectStatus.ERROR });
